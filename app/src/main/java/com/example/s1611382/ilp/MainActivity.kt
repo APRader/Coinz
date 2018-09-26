@@ -59,14 +59,13 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     private fun initializeLocationEngine() {
         locationEngine = LocationEngineProvider(this).obtainBestLocationEngineAvailable()
         locationEngine?.priority = LocationEnginePriority.HIGH_ACCURACY
+        locationEngine?.addLocationEngineListener(this)
         locationEngine?.activate()
 
         val lastLocation = locationEngine?.lastLocation
         if (lastLocation != null) {
             originLocation = lastLocation
             setCameraPosition(lastLocation)
-        } else {
-            locationEngine?.addLocationEngineListener(this)
         }
     }
 
@@ -112,6 +111,10 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     // lifecycle methods for MapBox override standard funs
     override fun onStart() {
         super.onStart()
+        if (PermissionsManager.areLocationPermissionsGranted(this)) {
+            locationEngine?.requestLocationUpdates()
+            locationLayerPlugin?.onStart()
+        }
         mapView.onStart()
     }
     override fun onResume() {
@@ -124,11 +127,14 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     }
     override fun onStop() {
         super.onStop()
+        locationEngine?.removeLocationUpdates()
+        locationLayerPlugin?.onStop()
         mapView.onStop()
     }
     override fun onDestroy() {
         super.onDestroy()
         mapView.onDestroy()
+        locationEngine?.deactivate()
     }
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
