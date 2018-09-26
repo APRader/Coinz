@@ -1,9 +1,9 @@
 package com.example.s1611382.ilp
 
+import android.content.Intent
 import android.location.Location
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.support.v7.app.AlertDialog
 import android.widget.Button
 import com.mapbox.android.core.location.LocationEngine
@@ -48,9 +48,8 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
             enableLocation()
         }
 
-        //open wallet
         walletButton.setOnClickListener {
-            // open wallet
+            openWallet()
         }
     }
 
@@ -89,6 +88,11 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     private fun setCameraPosition(location: Location) {
         map.animateCamera(CameraUpdateFactory.newLatLngZoom(
                 LatLng(location.latitude, location.longitude), 14.5))
+    }
+
+    private fun openWallet() {
+        val intent = Intent(this, Wallet::class.java)
+        startActivity(intent)
     }
 
     //-- from PermissionsListener --//
