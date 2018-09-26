@@ -4,6 +4,7 @@ import android.location.Location
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.os.PersistableBundle
+import android.support.v7.app.AlertDialog
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineListener
 import com.mapbox.android.core.location.LocationEnginePriority
@@ -85,11 +86,22 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     //-- from PermissionsListener --//
     //when user denies permission
     override fun onExplanationNeeded(permissionsToExplain: MutableList<String>?) {
-        TODO("not implemented") //Explain why app needs location permissions
+        /*seems to trigger when location previously not granted when app opens
+        but doesn't trigger when first denied.
+        Hence warning message built into onPermissionResult function*/
     }
     override fun onPermissionResult(granted: Boolean) {
         if (granted) {
             enableLocation()
+        } else {
+            val builder = AlertDialog.Builder(this@MainActivity)
+            builder.setTitle("Location permission not granted")
+            builder.setMessage("You denied permission to use location. " +
+                    "Without that information you cannot collect new coins. " +
+                    "Please accept access to location when you reopen the app " +
+                    "so you can enjoy Coinz to the fullest extent!")
+            val dialog: AlertDialog = builder.create()
+            dialog.show()
         }
     }
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
