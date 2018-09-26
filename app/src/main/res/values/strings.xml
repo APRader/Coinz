@@ -2,4 +2,5 @@
     <string name="app_name">ILP</string>
     //access token for Mapbox
     <string name="access_token">pk.eyJ1IjoiYXByYWRlciIsImEiOiJjam1odmQ1a2QxcDluM3BvOWJkZ3BhM3NjIn0.DygeFTcbsvcL4sZq-tofDQ</string>
+    <string name="wallet">Wallet</string>
 </resources>

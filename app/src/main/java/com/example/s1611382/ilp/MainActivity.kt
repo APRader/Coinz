@@ -5,6 +5,7 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.support.v7.app.AlertDialog
+import android.widget.Button
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineListener
 import com.mapbox.android.core.location.LocationEnginePriority
@@ -24,6 +25,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
     private lateinit var mapView: MapView
     private lateinit var map: MapboxMap
+    private lateinit var walletButton: Button
     private lateinit var permissionManager: PermissionsManager
     //stores current location at all times
     private lateinit var originLocation: Location
@@ -38,11 +40,17 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         setContentView(R.layout.activity_main)
         Mapbox.getInstance(applicationContext, getString(R.string.access_token))
         mapView = findViewById(R.id.mapView)
+        walletButton = findViewById(R.id.walletButton)
         mapView.onCreate(savedInstanceState)
         // this makes map variable usable in the rest of the class
         mapView.getMapAsync{mapboxMap ->
             map = mapboxMap
             enableLocation()
+        }
+
+        //open wallet
+        walletButton.setOnClickListener {
+            // open wallet
         }
     }
 
