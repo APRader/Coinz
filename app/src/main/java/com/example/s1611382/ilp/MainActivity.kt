@@ -25,6 +25,8 @@ import com.mapbox.mapboxsdk.plugins.locationlayer.modes.RenderMode
 import com.mapbox.mapboxsdk.annotations.MarkerViewOptions
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
+import com.mapbox.mapboxsdk.annotations.MarkerOptions
+import com.mapbox.mapboxsdk.maps.OnMapReadyCallback
 import com.mapbox.mapboxsdk.style.light.Position
 
 
@@ -50,16 +52,16 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         walletButton = findViewById(R.id.walletButton)
         mapView.onCreate(savedInstanceState)
         // this makes map variable usable in the rest of the class
-        mapView.getMapAsync{mapboxMap ->
+        mapView.getMapAsync { mapboxMap ->
             map = mapboxMap
             enableLocation()
+
+            drawCoinLocations(map)
         }
 
         walletButton.setOnClickListener {
             openWallet()
         }
-
-        drawCoinLocations()
     }
 
     //get user's permission for location
@@ -73,6 +75,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         }
     }
 
+    @SuppressLint("MissingPermission")
     private fun initializeLocationEngine() {
         locationEngine = LocationEngineProvider(this).obtainBestLocationEngineAvailable()
         locationEngine?.priority = LocationEnginePriority.HIGH_ACCURACY
@@ -104,7 +107,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         startActivity(intent)
     }
 
-    private fun drawCoinLocations() {
+    private fun drawCoinLocations(map: MapboxMap) {
         val featureCollection = FeatureCollection.fromJson("{\n" +
                 "  \"type\": \"FeatureCollection\",\n" +
                 "  \"date-generated\": \"Fri Sep 28 2018\",\n" +
@@ -171,6 +174,9 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
                 if (f.geometry() is Point) {
                     print("j")
                     val coordinates = (f.geometry() as Point).coordinates()
+                    map.addMarker(
+                            MarkerOptions().position(LatLng(coordinates[1], coordinates[0]))
+                    )
                 }
 
             }
@@ -217,6 +223,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
 
     // lifecycle methods for MapBox override standard funs
+    @SuppressLint("MissingPermission")
     override fun onStart() {
         super.onStart()
         if (PermissionsManager.areLocationPermissionsGranted(this)) {
