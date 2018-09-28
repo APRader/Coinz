@@ -1,5 +1,6 @@
 package com.example.s1611382.ilp
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.location.Location
 import android.support.v7.app.AppCompatActivity
@@ -11,7 +12,8 @@ import com.mapbox.android.core.location.LocationEngineListener
 import com.mapbox.android.core.location.LocationEnginePriority
 import com.mapbox.android.core.location.LocationEngineProvider
 import com.mapbox.android.core.permissions.PermissionsListener
-import com.mapbox.android.core.permissions.PermissionsManager
+import com.mapbox.android.core. permissions.PermissionsManager
+import com.mapbox.geojson.Feature
 import com.mapbox.mapboxsdk.Mapbox
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
 import com.mapbox.mapboxsdk.geometry.LatLng
@@ -20,6 +22,11 @@ import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerPlugin
 import com.mapbox.mapboxsdk.plugins.locationlayer.modes.CameraMode
 import com.mapbox.mapboxsdk.plugins.locationlayer.modes.RenderMode
+import com.mapbox.mapboxsdk.annotations.MarkerViewOptions
+import com.mapbox.geojson.FeatureCollection
+import com.mapbox.geojson.Point
+import com.mapbox.mapboxsdk.style.light.Position
+
 
 class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineListener {
 
@@ -51,6 +58,8 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         walletButton.setOnClickListener {
             openWallet()
         }
+
+        drawCoinLocations()
     }
 
     //get user's permission for location
@@ -95,6 +104,80 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         startActivity(intent)
     }
 
+    private fun drawCoinLocations() {
+        val featureCollection = FeatureCollection.fromJson("{\n" +
+                "  \"type\": \"FeatureCollection\",\n" +
+                "  \"date-generated\": \"Fri Sep 28 2018\",\n" +
+                "  \"time-generated\": \"00:00\",\n" +
+                "  \"approximate-time-remaining\": \"23:59\",\n" +
+                "  \"rates\": {\n" +
+                "                   \"SHIL\": 52.31043747053524,\n" +
+                "                   \"DOLR\": 22.808490581537793,\n" +
+                "                   \"QUID\": 45.12756144948401,\n" +
+                "                   \"PENY\": 28.379507202621213\n" +
+                "               },\n" +
+                "  \"features\": [\n" +
+                "  \n" +
+                "    {\n" +
+                "      \"type\": \"Feature\",\n" +
+                "      \n" +
+                "      \"properties\": {\n" +
+                "        \"id\": \"44b1-42cf-6bc8-9600-8d8c-aca3\",\n" +
+                "        \"value\": \"6.9096963653866075\",\n" +
+                "        \"currency\": \"PENY\",\n" +
+                "        \"marker-symbol\": \"6\",\n" +
+                "        \"marker-color\": \"#ff0000\"\n" +
+                "      },\n" +
+                "      \n" +
+                "      \"geometry\": {\n" +
+                "        \"type\": \"Point\",\n" +
+                "        \"coordinates\": [\n" +
+                "          -3.191763743472121,\n" +
+                "          55.94588791509546\n" +
+                "        ]\n" +
+                "      }\n" +
+                "\n" +
+                "    },\n" +
+                "        \n" +
+                "    {\n" +
+                "      \"type\": \"Feature\",\n" +
+                "      \n" +
+                "      \"properties\": {\n" +
+                "        \"id\": \"12a4-932f-993f-b305-da0c-1662\",\n" +
+                "        \"value\": \"3.0793822095760772\",\n" +
+                "        \"currency\": \"SHIL\",\n" +
+                "        \"marker-symbol\": \"3\",\n" +
+                "        \"marker-color\": \"#0000ff\"\n" +
+                "      },\n" +
+                "      \n" +
+                "      \"geometry\": {\n" +
+                "        \"type\": \"Point\",\n" +
+                "        \"coordinates\": [\n" +
+                "          -3.1921993923995347,\n" +
+                "          55.94544544713201\n" +
+                "        ]\n" +
+                "      }\n" +
+                "\n" +
+                "    }" +
+                "        \n" +
+                "   ]\n" +
+                "}\n" +
+                "  ")
+
+        val features = featureCollection.features()
+
+        if (features != null) {
+            for (f: Feature in features) {
+                if (f.geometry() is Point) {
+                    print("j")
+                    val coordinates = (f.geometry() as Point).coordinates()
+                }
+
+            }
+
+        }
+    }
+
     //-- from PermissionsListener --//
     //when user denies permission
     override fun onExplanationNeeded(permissionsToExplain: MutableList<String>?) {
@@ -124,9 +207,10 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     override fun onLocationChanged(location: Location?) {
         location?.let {
             originLocation = location
-            setCameraPosition(location)
+            //setCameraPosition(location)
         }
     }
+    @SuppressLint("MissingPermission")
     override fun onConnected() {
         locationEngine?.requestLocationUpdates()
     }
