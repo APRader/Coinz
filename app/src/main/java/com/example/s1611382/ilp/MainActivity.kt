@@ -5,8 +5,11 @@ import android.content.Intent
 import android.location.Location
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.design.widget.NavigationView
+import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.AlertDialog
 import android.widget.Button
+import android.widget.FrameLayout
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineListener
 import com.mapbox.android.core.location.LocationEnginePriority
@@ -28,6 +31,7 @@ import com.mapbox.geojson.Point
 import com.mapbox.mapboxsdk.annotations.MarkerOptions
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback
 import com.mapbox.mapboxsdk.style.light.Position
+import java.io.File
 
 
 class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineListener {
@@ -35,6 +39,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     private lateinit var mapView: MapView
     private lateinit var map: MapboxMap
     private lateinit var walletButton: Button
+    private lateinit var mDrawerLayout: DrawerLayout
     private lateinit var permissionManager: PermissionsManager
     //stores current location at all times
     private lateinit var originLocation: Location
@@ -62,6 +67,23 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         walletButton.setOnClickListener {
             openWallet()
         }
+
+        mDrawerLayout = findViewById(R.id.drawer_layout)
+
+        val navigationView: NavigationView = findViewById(R.id.nav_view)
+        navigationView.setNavigationItemSelectedListener { menuItem ->
+            // set item as selected to persist highlight
+            menuItem.isChecked = true
+            // close drawer when item is tapped
+            mDrawerLayout.closeDrawers()
+
+            // Add code here to update the UI based on the item selected
+            // For example, swap UI fragments here
+            openWallet()
+
+            true
+        }
+
     }
 
     //get user's permission for location
@@ -108,7 +130,9 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     }
 
     private fun drawCoinLocations(map: MapboxMap) {
-        val featureCollection = FeatureCollection.fromJson("{\n" +
+
+        val featureCollection = FeatureCollection.fromJson("\n" +
+                "{\n" +
                 "  \"type\": \"FeatureCollection\",\n" +
                 "  \"date-generated\": \"Fri Sep 28 2018\",\n" +
                 "  \"time-generated\": \"00:00\",\n" +
@@ -146,26 +170,46 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
                 "      \"type\": \"Feature\",\n" +
                 "      \n" +
                 "      \"properties\": {\n" +
-                "        \"id\": \"12a4-932f-993f-b305-da0c-1662\",\n" +
-                "        \"value\": \"3.0793822095760772\",\n" +
+                "        \"id\": \"7740-2cd5-e181-830a-8146-2c0b\",\n" +
+                "        \"value\": \"8.529361506913553\",\n" +
+                "        \"currency\": \"PENY\",\n" +
+                "        \"marker-symbol\": \"8\",\n" +
+                "        \"marker-color\": \"#ff0000\"\n" +
+                "      },\n" +
+                "      \n" +
+                "      \"geometry\": {\n" +
+                "        \"type\": \"Point\",\n" +
+                "        \"coordinates\": [\n" +
+                "          -3.190194725217555,\n" +
+                "          55.94610689723401\n" +
+                "        ]\n" +
+                "      }\n" +
+                "\n" +
+                "    },\n" +
+                "        \n" +
+                "    {\n" +
+                "      \"type\": \"Feature\",\n" +
+                "      \n" +
+                "      \"properties\": {\n" +
+                "        \"id\": \"8c9e-41bc-2b5d-397b-4546-467d\",\n" +
+                "        \"value\": \"0.35899518564213473\",\n" +
                 "        \"currency\": \"SHIL\",\n" +
-                "        \"marker-symbol\": \"3\",\n" +
+                "        \"marker-symbol\": \"0\",\n" +
                 "        \"marker-color\": \"#0000ff\"\n" +
                 "      },\n" +
                 "      \n" +
                 "      \"geometry\": {\n" +
                 "        \"type\": \"Point\",\n" +
                 "        \"coordinates\": [\n" +
-                "          -3.1921993923995347,\n" +
-                "          55.94544544713201\n" +
+                "          -3.1924307902888986,\n" +
+                "          55.94551117206641\n" +
                 "        ]\n" +
                 "      }\n" +
                 "\n" +
-                "    }" +
+                "    }\n" +
                 "        \n" +
                 "   ]\n" +
-                "}\n" +
-                "  ")
+                "}")
 
         val features = featureCollection.features()
 
