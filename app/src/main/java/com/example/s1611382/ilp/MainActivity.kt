@@ -79,7 +79,9 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
             // Add code here to update the UI based on the item selected
             // For example, swap UI fragments here
-            openWallet()
+            if (menuItem.itemId == R.id.nav_wallet) {
+                openWallet()
+            }
 
             true
         }
