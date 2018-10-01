@@ -14,6 +14,7 @@ import android.widget.Button
 import android.widget.FrameLayout
 import android.support.v7.widget.Toolbar
 import android.view.MenuItem
+import android.view.View
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineListener
 import com.mapbox.android.core.location.LocationEnginePriority
@@ -43,7 +44,6 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
     private lateinit var mapView: MapView
     private lateinit var map: MapboxMap
-    private lateinit var walletButton: Button
     private lateinit var mDrawerLayout: DrawerLayout
     private lateinit var permissionManager: PermissionsManager
     //stores current location at all times
@@ -69,7 +69,6 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
         Mapbox.getInstance(applicationContext, getString(R.string.access_token))
         mapView = findViewById(R.id.mapView)
-        walletButton = findViewById(R.id.walletButton)
         mapView.onCreate(savedInstanceState)
         // this makes map variable usable in the rest of the class
         mapView.getMapAsync { mapboxMap ->
@@ -79,8 +78,9 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
             drawCoinLocations(map)
         }
 
-        walletButton.setOnClickListener {
-            openWallet()
+        val fab: View = findViewById(R.id.fab)
+        fab.setOnClickListener {
+            setCameraPosition(originLocation)
         }
 
         mDrawerLayout = findViewById(R.id.drawer_layout)
