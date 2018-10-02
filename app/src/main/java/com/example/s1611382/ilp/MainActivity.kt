@@ -10,8 +10,6 @@ import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBar
 import android.support.v7.app.AlertDialog
-import android.widget.Button
-import android.widget.FrameLayout
 import android.support.v7.widget.Toolbar
 import android.view.MenuItem
 import android.view.View
@@ -30,14 +28,9 @@ import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerPlugin
 import com.mapbox.mapboxsdk.plugins.locationlayer.modes.CameraMode
 import com.mapbox.mapboxsdk.plugins.locationlayer.modes.RenderMode
-import com.mapbox.mapboxsdk.annotations.MarkerViewOptions
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
 import com.mapbox.mapboxsdk.annotations.MarkerOptions
-import com.mapbox.mapboxsdk.maps.OnMapReadyCallback
-import com.mapbox.mapboxsdk.style.light.Position
-import kotlinx.android.synthetic.main.activity_main.view.*
-import java.io.File
 
 
 class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineListener {
@@ -48,11 +41,15 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     private lateinit var permissionManager: PermissionsManager
     //stores current location at all times
     private lateinit var originLocation: Location
+    //contains GeoJson features
+    private lateinit var coinCollection: FeatureCollection
+    private lateinit var features: List<Feature>
 
     //gives user location
     private var locationEngine: LocationEngine? = null
     //for UI: icon representing user location
     private var locationLayerPlugin: LocationLayerPlugin? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -148,7 +145,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
     private fun drawCoinLocations(map: MapboxMap) {
 
-        val featureCollection = FeatureCollection.fromJson("\n" +
+        coinCollection = FeatureCollection.fromJson("\n" +
                 "{\n" +
                 "  \"type\": \"FeatureCollection\",\n" +
                 "  \"date-generated\": \"Fri Sep 28 2018\",\n" +
@@ -228,18 +225,14 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
                 "   ]\n" +
                 "}")
 
-        val features = featureCollection.features()
+        features= coinCollection.features() as List<Feature>
 
-        if (features != null) {
-            for (f: Feature in features) {
-                if (f.geometry() is Point) {
-                    print("j")
-                    val coordinates = (f.geometry() as Point).coordinates()
-                    map.addMarker(
-                            MarkerOptions().position(LatLng(coordinates[1], coordinates[0]))
-                    )
-                }
-
+        for (f: Feature in features) {
+            if (f.geometry() is Point) {
+                val coordinates = (f.geometry() as Point).coordinates()
+                map.addMarker(
+                        MarkerOptions().position(LatLng(coordinates[1], coordinates[0]))
+                )
             }
 
         }
@@ -286,6 +279,22 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         location?.let {
             originLocation = location
             //setCameraPosition(location)
+
+            //check if player is near a coin
+            for (f: Feature in features) {
+                if (f.geometry() is Point) {
+                    val coordinates = (f.geometry() as Point).coordinates()
+                    val coinLocation = Location("")
+                    coinLocation.latitude = coordinates[1]
+                    coinLocation.longitude = coordinates[0]
+                    //player is within 25 metres of the coin
+                    if (location.distanceTo(coinLocation) <= 25) {
+                        print("collected")
+                    }
+                }
+
+            }
+
         }
     }
     @SuppressLint("MissingPermission")
