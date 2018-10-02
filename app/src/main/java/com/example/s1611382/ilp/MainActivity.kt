@@ -289,7 +289,13 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
                     coinLocation.longitude = coordinates[0]
                     //player is within 25 metres of the coin
                     if (location.distanceTo(coinLocation) <= 25) {
-                        print("collected")
+                        val id = f.properties()?.get("id")
+
+                        val builder = AlertDialog.Builder(this@MainActivity)
+                        builder.setTitle("Near a coin")
+                        builder.setMessage("You're near coin $id")
+                        val dialog: AlertDialog = builder.create()
+                        dialog.show()
                     }
                 }
 
