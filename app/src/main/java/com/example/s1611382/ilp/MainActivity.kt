@@ -3,6 +3,8 @@ package com.example.s1611382.ilp
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.location.Location
+import android.os.AsyncTask
+import android.os.Handler
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.design.widget.NavigationView
@@ -13,6 +15,7 @@ import android.support.v7.app.AlertDialog
 import android.support.v7.widget.Toolbar
 import android.view.MenuItem
 import android.view.View
+import com.example.s1611382.ilp.MainActivity.DownloadCompleteRunner.result
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineListener
 import com.mapbox.android.core.location.LocationEnginePriority
@@ -31,6 +34,11 @@ import com.mapbox.mapboxsdk.plugins.locationlayer.modes.RenderMode
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
 import com.mapbox.mapboxsdk.annotations.MarkerOptions
+import java.io.IOException
+import java.io.InputStream
+import java.net.HttpURLConnection
+import java.net.URL
+import java.lang.Thread
 
 
 class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineListener {
@@ -72,7 +80,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
             map = mapboxMap
             enableLocation()
 
-            drawCoinLocations(map)
+            drawCoinLocations()
         }
 
         val fab: View = findViewById(R.id.fab)
@@ -97,6 +105,8 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
             true
         }
+        val task = DownloadFileTask(DownloadCompleteRunner)
+        task.execute("")
 
     }
 
@@ -143,7 +153,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         startActivity(intent)
     }
 
-    private fun drawCoinLocations(map: MapboxMap) {
+    private fun drawCoinLocations() {
 
         coinCollection = FeatureCollection.fromJson("\n" +
                 "{\n" +
@@ -225,7 +235,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
                 "   ]\n" +
                 "}")
 
-        features= coinCollection.features() as List<Feature>
+        features = coinCollection.features() as List<Feature>
 
         for (f: Feature in features) {
             if (f.geometry() is Point) {
@@ -237,6 +247,55 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
         }
     }
+
+    interface DownloadCompleteListener {
+        fun downloadComplete(result: String)
+    }
+
+    object DownloadCompleteRunner : DownloadCompleteListener {
+        var result : String? = null
+        override fun downloadComplete(result: String) {
+            this.result = result
+        }
+    }
+
+    class DownloadFileTask(private val caller : DownloadCompleteListener):
+            AsyncTask<String, Void, String>() {
+
+        override fun doInBackground(vararg urls: String): String = try {
+            loadFileFromNetwork(urls[0])
+        } catch (e: IOException) {
+            "Unable to load content. check your network connection"
+        }
+
+        private fun loadFileFromNetwork(urlString: String): String {
+            val stream: InputStream = downloadUrl(urlString)
+            // Read input from stream, build result as a string
+            result = stream.toString()
+            return result.toString()
+        }
+
+
+        //Given a string representation of a URL, sets up a connection and gets an input stream.
+        @Throws(IOException::class)
+        private fun downloadUrl(urlString: String): InputStream {
+            val url = URL(urlString)
+            val conn = url.openConnection() as HttpURLConnection
+            conn.readTimeout = 10000 // milliseconds
+            conn.connectTimeout = 15000 // milliseconds
+            conn.requestMethod = "GET"
+            conn.doInput = true
+            conn.connect() // Starts the query
+            return conn.inputStream
+        }
+
+        override fun onPostExecute(result: String) {
+            super.onPostExecute(result)
+
+            caller.downloadComplete(result)
+        }
+    }
+
 
     //open the drawer when nav button is tapped
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
