@@ -13,6 +13,7 @@ import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBar
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.Toolbar
+import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import com.example.s1611382.ilp.MainActivity.DownloadCompleteRunner.result
@@ -34,6 +35,7 @@ import com.mapbox.mapboxsdk.plugins.locationlayer.modes.RenderMode
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
 import com.mapbox.mapboxsdk.annotations.MarkerOptions
+import com.mapbox.mapboxsdk.maps.OnMapReadyCallback
 import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection
@@ -41,10 +43,11 @@ import java.net.URL
 import java.lang.Thread
 
 
-class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineListener {
+class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineListener, OnMapReadyCallback {
 
-    private lateinit var mapView: MapView
-    private lateinit var map: MapboxMap
+    private val tag = "MainActivity"
+    private var mapView: MapView? = null
+    private var map: MapboxMap? = null
     private lateinit var mDrawerLayout: DrawerLayout
     private lateinit var permissionManager: PermissionsManager
     //stores current location at all times
@@ -54,10 +57,9 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     private lateinit var features: List<Feature>
 
     //gives user location
-    private var locationEngine: LocationEngine? = null
+    private lateinit var locationEngine: LocationEngine
     //for UI: icon representing user location
-    private var locationLayerPlugin: LocationLayerPlugin? = null
-
+    private lateinit var locationLayerPlugin: LocationLayerPlugin
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,21 +74,17 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
             setHomeAsUpIndicator(R.drawable.ic_menu)
         }
 
-        Mapbox.getInstance(applicationContext, getString(R.string.access_token))
+        Mapbox.getInstance(this, getString(R.string.access_token))
         mapView = findViewById(R.id.mapView)
-        mapView.onCreate(savedInstanceState)
+        mapView?.onCreate(savedInstanceState)
         // this makes map variable usable in the rest of the class
-        mapView.getMapAsync { mapboxMap ->
+        mapView?.getMapAsync(this)
+        /*{ mapboxMap ->
             map = mapboxMap
             enableLocation()
 
             drawCoinLocations()
-        }
-
-        val fab: View = findViewById(R.id.fab)
-        fab.setOnClickListener {
-            setCameraPosition(originLocation)
-        }
+        }*/
 
         mDrawerLayout = findViewById(R.id.drawer_layout)
 
@@ -105,9 +103,28 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
             true
         }
-        val task = DownloadFileTask(DownloadCompleteRunner)
-        task.execute("http://homepages.inf.ed.ac.uk/stg/coinz/2018/10/03/coinzmap.geojson")
+//        val task = DownloadFileTask(DownloadCompleteRunner)
+//        task.execute("http://homepages.inf.ed.ac.uk/stg/coinz/2018/10/03/coinzmap.geojson")
 
+        val fab: View = findViewById(R.id.fab)
+        fab.setOnClickListener {
+            setCameraPosition(originLocation)
+        }
+
+    }
+
+    override fun onMapReady(mapboxMap: MapboxMap?) {
+        if (mapboxMap == null) {
+            Log.d(tag, "[onMapReady] mapBoxMap is null")
+        } else {
+            map = mapboxMap
+            map?.uiSettings?.isCompassEnabled = true
+            map?.uiSettings?.isZoomControlsEnabled = true
+
+            // Make location information available
+            enableLocation()
+            drawCoinLocations()
+        }
     }
 
     //get user's permission for location
@@ -116,6 +133,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
             initializeLocationEngine()
             initializeLocationLayer()
         } else {
+            Log.d(tag, "Permissions are not granted")
             permissionManager = PermissionsManager(this)
             permissionManager.requestLocationPermissions(this)
         }
@@ -124,27 +142,39 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     @SuppressLint("MissingPermission")
     private fun initializeLocationEngine() {
         locationEngine = LocationEngineProvider(this).obtainBestLocationEngineAvailable()
-        locationEngine?.priority = LocationEnginePriority.HIGH_ACCURACY
-        locationEngine?.addLocationEngineListener(this)
-        locationEngine?.activate()
+        locationEngine.addLocationEngineListener(this)
+        locationEngine.apply {
+            interval = 5000
+            fastestInterval = 1000
+            priority = LocationEnginePriority.HIGH_ACCURACY
+            activate()
+        }
 
-        val lastLocation = locationEngine?.lastLocation
+        val lastLocation = locationEngine.lastLocation
         if (lastLocation != null) {
             originLocation = lastLocation
             setCameraPosition(lastLocation)
-        }
+        } //else { locationEngine.addLocationEngineListener(this) }
     }
 
     private fun initializeLocationLayer() {
-        locationLayerPlugin = LocationLayerPlugin(mapView, map, locationEngine)
-        //for camera tracking location
-        locationLayerPlugin?.setLocationLayerEnabled(true)
-        locationLayerPlugin?.cameraMode = CameraMode.TRACKING
-        locationLayerPlugin?.renderMode = RenderMode.NORMAL
+        if (mapView == null) { Log.d(tag, "mapView is null") }
+        else {
+            if (map == null) { Log.d(tag, "map is null") }
+            else {
+                locationLayerPlugin = LocationLayerPlugin(mapView!!, map!!, locationEngine)
+                //for camera tracking location
+                locationLayerPlugin.apply {
+                    setLocationLayerEnabled(true)
+                    cameraMode = CameraMode.TRACKING
+                    renderMode = RenderMode.NORMAL
+                }
+            }
+        }
     }
 
     private fun setCameraPosition(location: Location) {
-        map.animateCamera(CameraUpdateFactory.newLatLngZoom(
+        map?.animateCamera(CameraUpdateFactory.newLatLngZoom(
                 LatLng(location.latitude, location.longitude), 14.5))
     }
 
@@ -240,7 +270,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         for (f: Feature in features) {
             if (f.geometry() is Point) {
                 val coordinates = (f.geometry() as Point).coordinates()
-                map.addMarker(
+                map?.addMarker(
                         MarkerOptions().position(LatLng(coordinates[1], coordinates[0]))
                 )
             }
@@ -335,9 +365,11 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
     //-- from LocationEngineListener --//
     override fun onLocationChanged(location: Location?) {
-        location?.let {
+        if (location == null) {
+            Log.d(tag, "[onLocationChanged] location is null")
+        } else {
             originLocation = location
-            //setCameraPosition(location)
+            setCameraPosition(originLocation)
 
             //check if player is near a coin
             for (f: Feature in features) {
@@ -364,7 +396,8 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     }
     @SuppressLint("MissingPermission")
     override fun onConnected() {
-        locationEngine?.requestLocationUpdates()
+        Log.d(tag, "[onConnected] requesting location updates")
+        locationEngine.requestLocationUpdates()
     }
 
 
@@ -372,39 +405,35 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     @SuppressLint("MissingPermission")
     override fun onStart() {
         super.onStart()
-        if (PermissionsManager.areLocationPermissionsGranted(this)) {
-            locationEngine?.requestLocationUpdates()
-            locationLayerPlugin?.onStart()
-        }
-        mapView.onStart()
+        mapView?.onStart()
     }
     override fun onResume() {
         super.onResume()
-        mapView.onResume()
+        mapView?.onResume()
     }
     override fun onPause() {
         super.onPause()
-        mapView.onPause()
+        mapView?.onPause()
     }
     override fun onStop() {
         super.onStop()
-        locationEngine?.removeLocationUpdates()
-        locationLayerPlugin?.onStop()
-        mapView.onStop()
+        locationEngine.removeLocationUpdates()
+        locationLayerPlugin.onStop()
+        mapView?.onStop()
     }
     override fun onDestroy() {
         super.onDestroy()
-        mapView.onDestroy()
-        locationEngine?.deactivate()
+        mapView?.onDestroy()
+        locationEngine.deactivate()
     }
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
         if (outState != null) {
-            mapView.onSaveInstanceState(outState)
+            mapView?.onSaveInstanceState(outState)
         }
     }
     override fun onLowMemory() {
         super.onLowMemory()
-        mapView.onLowMemory()
+        mapView?.onLowMemory()
     }
 }
