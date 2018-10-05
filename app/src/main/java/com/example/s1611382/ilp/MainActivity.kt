@@ -106,7 +106,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
             true
         }
         val task = DownloadFileTask(DownloadCompleteRunner)
-        task.execute("")
+        task.execute("http://homepages.inf.ed.ac.uk/stg/coinz/2018/10/03/coinzmap.geojson")
 
     }
 
@@ -271,7 +271,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         private fun loadFileFromNetwork(urlString: String): String {
             val stream: InputStream = downloadUrl(urlString)
             // Read input from stream, build result as a string
-            result = stream.toString()
+            result = stream.bufferedReader().use { it.readText() }
             return result.toString()
         }
 
