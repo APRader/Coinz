@@ -51,6 +51,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     private var mapView: MapView? = null
     private var map: MapboxMap? = null
     private var downloadDate = "" // Format: YYYY/MM/DD
+    private var lastJson = ""
     private val preferencesFile = "MyPrefsFile" // for storing preferences
 
     private lateinit var mDrawerLayout: DrawerLayout
@@ -121,14 +122,18 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
             // Make location information available
             enableLocation()
 
-            //get map data and draw marker
-            val task = DownloadFileTask(DownloadCompleteRunner)
-            val result = task.execute("http://homepages.inf.ed.ac.uk/stg/coinz/2018/10/03/coinzmap.geojson").get()
-            drawCoinLocations(result)
-
-            // update download date
+            // get current date
+            // update download date as a string
             val sdf = SimpleDateFormat("yyyy/MM/dd", Locale.UK)
-            downloadDate = sdf.format(Date())
+            val today = sdf.format(Date())
+
+            //get map data and draw marker
+            if (today != downloadDate || lastJson == "") {
+                val task = DownloadFileTask(DownloadCompleteRunner)
+                lastJson = task.execute("http://homepages.inf.ed.ac.uk/stg/coinz/$today/coinzmap.geojson").get()
+                downloadDate = today
+            }
+            drawCoinLocations(lastJson)
         }
     }
 
@@ -180,7 +185,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
     private fun setCameraPosition(location: Location) {
         map?.animateCamera(CameraUpdateFactory.newLatLngZoom(
-                LatLng(location.latitude, location.longitude), 14.5))
+                LatLng(location.latitude, location.longitude), 15.0))
     }
 
     private fun openWallet() {
@@ -340,8 +345,10 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
         // use "" as the default value (this might be the first time the app is run)
         downloadDate = settings.getString("lastDownloadDate", "")
+        lastJson = settings.getString("lastJson", "")
 
         Log.d(tag, "[onStart] Recalled lastDownloadDate is '$downloadDate'")
+        Log.d(tag, "[onStart] Recalled lastJson is '$lastJson'")
     }
     override fun onResume() {
         super.onResume()
@@ -358,6 +365,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         mapView?.onStop()
 
         Log.d(tag, "[onStop] Storing lastDownloadDate of $downloadDate")
+        Log.d(tag, "[onStop] Storing lastJson of $lastJson")
 
         // All objects are from android.context.Context
         val settings = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE)
@@ -365,6 +373,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         // We need an Editor object o make preference changes
         val editor = settings.edit()
         editor.putString("lastDownloadDate", downloadDate)
+        editor.putString("lastJson", lastJson)
         // Apply the edits!
         editor.apply()
     }
