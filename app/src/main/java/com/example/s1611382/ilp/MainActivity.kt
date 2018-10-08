@@ -2,9 +2,9 @@ package com.example.s1611382.ilp
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.graphics.drawable.DrawableWrapper
 import android.location.Location
 import android.os.AsyncTask
-import android.os.Handler
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.design.widget.NavigationView
@@ -40,7 +40,6 @@ import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
-import java.lang.Thread
 
 
 class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineListener, OnMapReadyCallback {
@@ -79,12 +78,6 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         mapView?.onCreate(savedInstanceState)
         // this makes map variable usable in the rest of the class
         mapView?.getMapAsync(this)
-        /*{ mapboxMap ->
-            map = mapboxMap
-            enableLocation()
-
-            drawCoinLocations()
-        }*/
 
         mDrawerLayout = findViewById(R.id.drawer_layout)
 
@@ -103,8 +96,6 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
             true
         }
-//        val task = DownloadFileTask(DownloadCompleteRunner)
-//        task.execute("http://homepages.inf.ed.ac.uk/stg/coinz/2018/10/03/coinzmap.geojson")
 
         val fab: View = findViewById(R.id.fab)
         fab.setOnClickListener {
@@ -123,7 +114,10 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
             // Make location information available
             enableLocation()
-            drawCoinLocations()
+
+            val task = DownloadFileTask(DownloadCompleteRunner)
+            val result = task.execute("http://homepages.inf.ed.ac.uk/stg/coinz/2018/10/03/coinzmap.geojson").get()
+            drawCoinLocations(result)
         }
     }
 
@@ -183,87 +177,9 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         startActivity(intent)
     }
 
-    private fun drawCoinLocations() {
+    private fun drawCoinLocations(JsonFile : String?) {
 
-        coinCollection = FeatureCollection.fromJson("\n" +
-                "{\n" +
-                "  \"type\": \"FeatureCollection\",\n" +
-                "  \"date-generated\": \"Fri Sep 28 2018\",\n" +
-                "  \"time-generated\": \"00:00\",\n" +
-                "  \"approximate-time-remaining\": \"23:59\",\n" +
-                "  \"rates\": {\n" +
-                "                   \"SHIL\": 52.31043747053524,\n" +
-                "                   \"DOLR\": 22.808490581537793,\n" +
-                "                   \"QUID\": 45.12756144948401,\n" +
-                "                   \"PENY\": 28.379507202621213\n" +
-                "               },\n" +
-                "  \"features\": [\n" +
-                "  \n" +
-                "    {\n" +
-                "      \"type\": \"Feature\",\n" +
-                "      \n" +
-                "      \"properties\": {\n" +
-                "        \"id\": \"44b1-42cf-6bc8-9600-8d8c-aca3\",\n" +
-                "        \"value\": \"6.9096963653866075\",\n" +
-                "        \"currency\": \"PENY\",\n" +
-                "        \"marker-symbol\": \"6\",\n" +
-                "        \"marker-color\": \"#ff0000\"\n" +
-                "      },\n" +
-                "      \n" +
-                "      \"geometry\": {\n" +
-                "        \"type\": \"Point\",\n" +
-                "        \"coordinates\": [\n" +
-                "          -3.191763743472121,\n" +
-                "          55.94588791509546\n" +
-                "        ]\n" +
-                "      }\n" +
-                "\n" +
-                "    },\n" +
-                "        \n" +
-                "    {\n" +
-                "      \"type\": \"Feature\",\n" +
-                "      \n" +
-                "      \"properties\": {\n" +
-                "        \"id\": \"7740-2cd5-e181-830a-8146-2c0b\",\n" +
-                "        \"value\": \"8.529361506913553\",\n" +
-                "        \"currency\": \"PENY\",\n" +
-                "        \"marker-symbol\": \"8\",\n" +
-                "        \"marker-color\": \"#ff0000\"\n" +
-                "      },\n" +
-                "      \n" +
-                "      \"geometry\": {\n" +
-                "        \"type\": \"Point\",\n" +
-                "        \"coordinates\": [\n" +
-                "          -3.190194725217555,\n" +
-                "          55.94610689723401\n" +
-                "        ]\n" +
-                "      }\n" +
-                "\n" +
-                "    },\n" +
-                "        \n" +
-                "    {\n" +
-                "      \"type\": \"Feature\",\n" +
-                "      \n" +
-                "      \"properties\": {\n" +
-                "        \"id\": \"8c9e-41bc-2b5d-397b-4546-467d\",\n" +
-                "        \"value\": \"0.35899518564213473\",\n" +
-                "        \"currency\": \"SHIL\",\n" +
-                "        \"marker-symbol\": \"0\",\n" +
-                "        \"marker-color\": \"#0000ff\"\n" +
-                "      },\n" +
-                "      \n" +
-                "      \"geometry\": {\n" +
-                "        \"type\": \"Point\",\n" +
-                "        \"coordinates\": [\n" +
-                "          -3.1924307902888986,\n" +
-                "          55.94551117206641\n" +
-                "        ]\n" +
-                "      }\n" +
-                "\n" +
-                "    }\n" +
-                "        \n" +
-                "   ]\n" +
-                "}")
+        coinCollection = FeatureCollection.fromJson(JsonFile.toString())
 
         features = coinCollection.features() as List<Feature>
 
@@ -286,6 +202,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         var result : String? = null
         override fun downloadComplete(result: String) {
             this.result = result
+
         }
     }
 
@@ -369,7 +286,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
             Log.d(tag, "[onLocationChanged] location is null")
         } else {
             originLocation = location
-            setCameraPosition(originLocation)
+            //setCameraPosition(originLocation)
 
             //check if player is near a coin
             for (f: Feature in features) {
