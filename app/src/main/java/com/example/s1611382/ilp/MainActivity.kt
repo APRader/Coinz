@@ -1,6 +1,7 @@
 package com.example.s1611382.ilp
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.DrawableWrapper
 import android.location.Location
@@ -40,6 +41,8 @@ import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineListener, OnMapReadyCallback {
@@ -47,6 +50,9 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     private val tag = "MainActivity"
     private var mapView: MapView? = null
     private var map: MapboxMap? = null
+    private var downloadDate = "" // Format: YYYY/MM/DD
+    private val preferencesFile = "MyPrefsFile" // for storing preferences
+
     private lateinit var mDrawerLayout: DrawerLayout
     private lateinit var permissionManager: PermissionsManager
     //stores current location at all times
@@ -115,9 +121,14 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
             // Make location information available
             enableLocation()
 
+            //get map data and draw marker
             val task = DownloadFileTask(DownloadCompleteRunner)
             val result = task.execute("http://homepages.inf.ed.ac.uk/stg/coinz/2018/10/03/coinzmap.geojson").get()
             drawCoinLocations(result)
+
+            // update download date
+            val sdf = SimpleDateFormat("yyyy/MM/dd", Locale.UK)
+            downloadDate = sdf.format(Date())
         }
     }
 
@@ -323,6 +334,14 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     override fun onStart() {
         super.onStart()
         mapView?.onStart()
+
+        // Restore preferences
+        val settings = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE)
+
+        // use "" as the default value (this might be the first time the app is run)
+        downloadDate = settings.getString("lastDownloadDate", "")
+
+        Log.d(tag, "[onStart] Recalled lastDownloadDate is '$downloadDate'")
     }
     override fun onResume() {
         super.onResume()
@@ -337,6 +356,17 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         locationEngine.removeLocationUpdates()
         locationLayerPlugin.onStop()
         mapView?.onStop()
+
+        Log.d(tag, "[onStop] Storing lastDownloadDate of $downloadDate")
+
+        // All objects are from android.context.Context
+        val settings = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE)
+
+        // We need an Editor object o make preference changes
+        val editor = settings.edit()
+        editor.putString("lastDownloadDate", downloadDate)
+        // Apply the edits!
+        editor.apply()
     }
     override fun onDestroy() {
         super.onDestroy()
