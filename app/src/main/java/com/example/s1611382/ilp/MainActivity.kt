@@ -35,6 +35,7 @@ import com.mapbox.mapboxsdk.plugins.locationlayer.modes.CameraMode
 import com.mapbox.mapboxsdk.plugins.locationlayer.modes.RenderMode
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
+import com.mapbox.mapboxsdk.annotations.Marker
 import com.mapbox.mapboxsdk.annotations.MarkerOptions
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback
 import java.io.IOException
@@ -53,6 +54,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     private var downloadDate = "" // Format: YYYY/MM/DD
     private var lastJson = ""
     private val preferencesFile = "MyPrefsFile" // for storing preferences
+    private var markers: MutableList<MarkerOptions> = mutableListOf()
 
     private lateinit var mDrawerLayout: DrawerLayout
     private lateinit var permissionManager: PermissionsManager
@@ -106,7 +108,11 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
         val fab: View = findViewById(R.id.fab)
         fab.setOnClickListener {
-            setCameraPosition(originLocation)
+            if (::originLocation.isInitialized) {
+                setCameraPosition(originLocation)
+            } else {
+                Log.d(tag, "[fab] originLocation not initialized")
+            }
         }
 
     }
@@ -122,18 +128,8 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
             // Make location information available
             enableLocation()
 
-            // get current date
-            // update download date as a string
-            val sdf = SimpleDateFormat("yyyy/MM/dd", Locale.UK)
-            val today = sdf.format(Date())
-
-            //get map data and draw marker
-            if (today != downloadDate || lastJson == "") {
-                val task = DownloadFileTask(DownloadCompleteRunner)
-                lastJson = task.execute("http://homepages.inf.ed.ac.uk/stg/coinz/$today/coinzmap.geojson").get()
-                downloadDate = today
-            }
-            drawCoinLocations(lastJson)
+            // Get the GeoJSON marker coordinates from the web
+            downloadMap()
         }
     }
 
@@ -152,7 +148,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     @SuppressLint("MissingPermission")
     private fun initializeLocationEngine() {
         locationEngine = LocationEngineProvider(this).obtainBestLocationEngineAvailable()
-        locationEngine.addLocationEngineListener(this)
+        //locationEngine.addLocationEngineListener(this)
         locationEngine.apply {
             interval = 5000
             fastestInterval = 1000
@@ -164,7 +160,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         if (lastLocation != null) {
             originLocation = lastLocation
             setCameraPosition(lastLocation)
-        } //else { locationEngine.addLocationEngineListener(this) }
+        } else { locationEngine.addLocationEngineListener(this) }
     }
 
     private fun initializeLocationLayer() {
@@ -184,8 +180,12 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     }
 
     private fun setCameraPosition(location: Location) {
-        map?.animateCamera(CameraUpdateFactory.newLatLngZoom(
-                LatLng(location.latitude, location.longitude), 15.0))
+        if (location == null) {
+            Log.d(tag, "[setCameraPosition] location is null")
+        } else {
+            map?.animateCamera(CameraUpdateFactory.newLatLngZoom(
+                    LatLng(location.latitude, location.longitude), 15.0))
+        }
     }
 
     private fun openWallet() {
@@ -202,11 +202,37 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         for (f: Feature in features) {
             if (f.geometry() is Point) {
                 val coordinates = (f.geometry() as Point).coordinates()
-                map?.addMarker(
-                        MarkerOptions().position(LatLng(coordinates[1], coordinates[0]))
-                )
+                // marker contains coordinates and id as a title
+                val marker  = MarkerOptions().position(LatLng(coordinates[1], coordinates[0])).title(f.properties()?.get("id").toString())
+                markers.add(marker)
+                map?.addMarker(marker)
             }
 
+        }
+    }
+
+    private fun downloadMap()   {
+        // get current date
+        // update download date as a string
+        val sdf = SimpleDateFormat("yyyy/MM/dd", Locale.UK)
+        val today = sdf.format(Date())
+
+        //get map data and draw marker
+        if (today != downloadDate || lastJson == ""
+                || lastJson == "Unable to load content. check your network connection") {
+            val task = DownloadFileTask(DownloadCompleteRunner)
+            lastJson = task.execute("http://homepages.inf.ed.ac.uk/stg/coinz/$today/coinzmap.geojson").get()
+            downloadDate = today
+        }
+        if (lastJson == "Unable to load content. check your network connection") {
+            val builder = AlertDialog.Builder(this@MainActivity)
+            builder.setTitle("No network connection")
+            builder.setMessage("Unable to load content. " +
+                    "Check your network connection and relaunch your app to try again")
+            val dialog: AlertDialog = builder.create()
+            dialog.show()
+        } else {
+            drawCoinLocations(lastJson)
         }
     }
 
@@ -303,26 +329,29 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         } else {
             originLocation = location
             //setCameraPosition(originLocation)
+            if (::features.isInitialized) {
+                //check if player is near a coin
+                for (f: Feature in features) {
+                    if (f.geometry() is Point) {
+                        val coordinates = (f.geometry() as Point).coordinates()
+                        val coinLocation = Location("")
+                        coinLocation.latitude = coordinates[1]
+                        coinLocation.longitude = coordinates[0]
+                        //player is within 25 metres of the coin
+                        if (location.distanceTo(coinLocation) <= 25) {
+                            val id = f.properties()?.get("id")
 
-            //check if player is near a coin
-            for (f: Feature in features) {
-                if (f.geometry() is Point) {
-                    val coordinates = (f.geometry() as Point).coordinates()
-                    val coinLocation = Location("")
-                    coinLocation.latitude = coordinates[1]
-                    coinLocation.longitude = coordinates[0]
-                    //player is within 25 metres of the coin
-                    if (location.distanceTo(coinLocation) <= 25) {
-                        val id = f.properties()?.get("id")
-
-                        val builder = AlertDialog.Builder(this@MainActivity)
-                        builder.setTitle("Near a coin")
-                        builder.setMessage("You're near coin $id")
-                        val dialog: AlertDialog = builder.create()
-                        dialog.show()
+                            val builder = AlertDialog.Builder(this@MainActivity)
+                            builder.setTitle("Near a coin")
+                            builder.setMessage("You're near coin $id")
+                            val dialog: AlertDialog = builder.create()
+                            dialog.show()
+                        }
                     }
                 }
 
+            } else {
+                Log.d(tag, "features is empty")
             }
 
         }
@@ -393,3 +422,4 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         mapView?.onLowMemory()
     }
 }
+
