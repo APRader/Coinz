@@ -3,7 +3,10 @@ package com.example.s1611382.ilp
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.drawable.DrawableWrapper
+import android.graphics.drawable.Icon
 import android.location.Location
 import android.os.AsyncTask
 import android.support.v7.app.AppCompatActivity
@@ -35,6 +38,7 @@ import com.mapbox.mapboxsdk.plugins.locationlayer.modes.CameraMode
 import com.mapbox.mapboxsdk.plugins.locationlayer.modes.RenderMode
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
+import com.mapbox.mapboxsdk.annotations.IconFactory
 import com.mapbox.mapboxsdk.annotations.Marker
 import com.mapbox.mapboxsdk.annotations.MarkerOptions
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback
@@ -68,6 +72,11 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     private lateinit var locationEngine: LocationEngine
     //for UI: icon representing user location
     private lateinit var locationLayerPlugin: LocationLayerPlugin
+
+    private lateinit var bm: Bitmap
+    private lateinit var iconRed: com.mapbox.mapboxsdk.annotations.Icon
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -114,6 +123,11 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
                 Log.d(tag, "[fab] originLocation not initialized")
             }
         }
+
+        // create icons for the coins
+        bm = BitmapFactory.decodeResource(resources, R.drawable.coin_peny)
+        iconRed =
+                IconFactory.getInstance(this).fromBitmap(bm)
 
     }
 
@@ -203,7 +217,8 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
             if (f.geometry() is Point) {
                 val coordinates = (f.geometry() as Point).coordinates()
                 // marker contains coordinates and id as a title
-                val marker  = MarkerOptions().position(LatLng(coordinates[1], coordinates[0])).title(f.properties()?.get("id").toString())
+                val marker  = MarkerOptions().position(LatLng(coordinates[1], coordinates[0]))
+                        .title(f.properties()?.get("id").toString()).icon(iconRed)
                 markers.add(marker)
                 map?.addMarker(marker)
             }
