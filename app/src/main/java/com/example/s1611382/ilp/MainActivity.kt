@@ -74,9 +74,11 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     private lateinit var locationLayerPlugin: LocationLayerPlugin
 
     private lateinit var bm: Bitmap
-    private lateinit var iconRed: com.mapbox.mapboxsdk.annotations.Icon
-
-
+    private lateinit var coinIcon: com.mapbox.mapboxsdk.annotations.Icon
+    private lateinit var coinCurrency: String
+    private lateinit var coinValue: String
+    private lateinit var coinColour: String
+    private lateinit var coinSymbol: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -124,11 +126,6 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
             }
         }
 
-        // create icons for the coins
-        bm = BitmapFactory.decodeResource(resources, R.drawable.coin_peny)
-        iconRed =
-                IconFactory.getInstance(this).fromBitmap(bm)
-
     }
 
     override fun onMapReady(mapboxMap: MapboxMap?) {
@@ -162,7 +159,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     @SuppressLint("MissingPermission")
     private fun initializeLocationEngine() {
         locationEngine = LocationEngineProvider(this).obtainBestLocationEngineAvailable()
-        //locationEngine.addLocationEngineListener(this)
+        locationEngine.addLocationEngineListener(this)
         locationEngine.apply {
             interval = 5000
             fastestInterval = 1000
@@ -174,7 +171,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         if (lastLocation != null) {
             originLocation = lastLocation
             setCameraPosition(lastLocation)
-        } else { locationEngine.addLocationEngineListener(this) }
+        } //else { locationEngine.addLocationEngineListener(this) }
     }
 
     private fun initializeLocationLayer() {
@@ -217,8 +214,23 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
             if (f.geometry() is Point) {
                 val coordinates = (f.geometry() as Point).coordinates()
                 // marker contains coordinates and id as a title
+
+                //coinCurrency = f.properties()?.get("currency").toString()
+                coinValue = f.properties()?.get("value").toString().removeSurrounding("\"")
+                coinColour = f.properties()?.get("marker-color").toString()
+                        .removeSurrounding("\"").removePrefix("#")
+                coinSymbol = f.properties()?.get("marker-symbol").toString()
+                        .removeSurrounding("\"")
+                coinCurrency = f.properties()?.get("currency").toString()
+                        .removeSurrounding("\"")
+
+                val pin = "pin_$coinSymbol" + "_$coinColour"
+                val resID = resources.getIdentifier(pin, "drawable", packageName)
+                bm = BitmapFactory.decodeResource(resources, resID)
+                coinIcon = IconFactory.getInstance(this).fromBitmap(bm)
+
                 val marker  = MarkerOptions().position(LatLng(coordinates[1], coordinates[0]))
-                        .title(f.properties()?.get("id").toString()).icon(iconRed)
+                        .title(f.properties()?.get("id").toString()).icon(coinIcon)
                 markers.add(marker)
                 map?.addMarker(marker)
             }
