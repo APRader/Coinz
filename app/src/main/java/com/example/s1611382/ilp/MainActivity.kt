@@ -58,7 +58,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     private var downloadDate = "" // Format: YYYY/MM/DD
     private var lastJson = ""
     private val preferencesFile = "MyPrefsFile" // for storing preferences
-    private var markers: MutableList<MarkerOptions> = mutableListOf()
+    private var markers: MutableList<Marker?> = mutableListOf()
 
     private lateinit var mDrawerLayout: DrawerLayout
     private lateinit var permissionManager: PermissionsManager
@@ -79,6 +79,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     private lateinit var coinValue: String
     private lateinit var coinColour: String
     private lateinit var coinSymbol: String
+    private lateinit var coinId: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -213,9 +214,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         for (f: Feature in features) {
             if (f.geometry() is Point) {
                 val coordinates = (f.geometry() as Point).coordinates()
-                // marker contains coordinates and id as a title
 
-                //coinCurrency = f.properties()?.get("currency").toString()
                 coinValue = f.properties()?.get("value").toString().removeSurrounding("\"")
                 coinColour = f.properties()?.get("marker-color").toString()
                         .removeSurrounding("\"").removePrefix("#")
@@ -223,16 +222,19 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
                         .removeSurrounding("\"")
                 coinCurrency = f.properties()?.get("currency").toString()
                         .removeSurrounding("\"")
+                coinId = f.properties()?.get("id").toString()
+                        .removeSurrounding("\"")
 
                 val pin = "pin_$coinSymbol" + "_$coinColour"
                 val resID = resources.getIdentifier(pin, "drawable", packageName)
                 bm = BitmapFactory.decodeResource(resources, resID)
                 coinIcon = IconFactory.getInstance(this).fromBitmap(bm)
 
-                val marker  = MarkerOptions().position(LatLng(coordinates[1], coordinates[0]))
-                        .title(f.properties()?.get("id").toString()).icon(coinIcon)
+                val markerOpt  = MarkerOptions().position(LatLng(coordinates[1], coordinates[0]))
+                        .title("$coinCurrency $coinValue").icon(coinIcon).snippet(coinId)
+                // We need the marker, not the marker option saved in the list, so we can remove it later
+                val marker: Marker? = map?.addMarker(markerOpt)
                 markers.add(marker)
-                map?.addMarker(marker)
             }
 
         }
@@ -244,22 +246,50 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         val sdf = SimpleDateFormat("yyyy/MM/dd", Locale.UK)
         val today = sdf.format(Date())
 
-        //get map data and draw marker
-        if (today != downloadDate || lastJson == ""
-                || lastJson == "Unable to load content. check your network connection") {
+        //get map data if download date is old
+        if (today != downloadDate) {
             val task = DownloadFileTask(DownloadCompleteRunner)
             lastJson = task.execute("http://homepages.inf.ed.ac.uk/stg/coinz/$today/coinzmap.geojson").get()
-            downloadDate = today
         }
-        if (lastJson == "Unable to load content. check your network connection") {
+        // check if Json contains valid coin data (i.e. download was successful)
+        if (lastJson.startsWith("\n{\n")){
+            drawCoinLocations(lastJson)
+            //only update download date if download was successful and coins are drawn
+            downloadDate = today
+        } else {
             val builder = AlertDialog.Builder(this@MainActivity)
             builder.setTitle("No network connection")
             builder.setMessage("Unable to load content. " +
                     "Check your network connection and relaunch your app to try again")
             val dialog: AlertDialog = builder.create()
             dialog.show()
+        }
+    }
+
+    private fun nearCoin(location: Location?) {
+        if (::features.isInitialized) {
+            //check if player is near a coin
+            for (marker: Marker? in markers) {
+                    val coinLocation = Location("")
+                if (marker != null) {
+                    coinLocation.latitude = marker.position.latitude
+                    coinLocation.longitude = marker.position.longitude
+                    //player is within 25 metres of the coin
+                    if (location!!.distanceTo(coinLocation) <= 25) {
+                        val id = marker.snippet
+                        val builder = AlertDialog.Builder(this@MainActivity)
+                        builder.setTitle("Near a coin")
+                        builder.setMessage("You're near coin $id")
+                        val dialog: AlertDialog = builder.create()
+                        dialog.show()
+                        // coin is deleted from map
+                        map?.removeMarker(marker)
+                    }
+                }
+            }
+
         } else {
-            drawCoinLocations(lastJson)
+            Log.d(tag, "features is empty")
         }
     }
 
@@ -356,31 +386,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         } else {
             originLocation = location
             //setCameraPosition(originLocation)
-            if (::features.isInitialized) {
-                //check if player is near a coin
-                for (f: Feature in features) {
-                    if (f.geometry() is Point) {
-                        val coordinates = (f.geometry() as Point).coordinates()
-                        val coinLocation = Location("")
-                        coinLocation.latitude = coordinates[1]
-                        coinLocation.longitude = coordinates[0]
-                        //player is within 25 metres of the coin
-                        if (location.distanceTo(coinLocation) <= 25) {
-                            val id = f.properties()?.get("id")
-
-                            val builder = AlertDialog.Builder(this@MainActivity)
-                            builder.setTitle("Near a coin")
-                            builder.setMessage("You're near coin $id")
-                            val dialog: AlertDialog = builder.create()
-                            dialog.show()
-                        }
-                    }
-                }
-
-            } else {
-                Log.d(tag, "features is empty")
-            }
-
+            nearCoin(location)
         }
     }
     @SuppressLint("MissingPermission")
