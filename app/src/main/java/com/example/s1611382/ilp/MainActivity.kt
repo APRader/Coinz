@@ -58,7 +58,10 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     private var downloadDate = "" // Format: YYYY/MM/DD
     private var lastJson = ""
     private val preferencesFile = "MyPrefsFile" // for storing preferences
-    private var markers: MutableList<Marker?> = mutableListOf()
+    // each item in the list contains a marker and the details of the corresponding coin
+    private var markerPairs: MutableList<Pair<List<String>, Marker?>> = mutableListOf()
+
+    var coins: MutableList<String> = mutableListOf()
 
     private lateinit var mDrawerLayout: DrawerLayout
     private lateinit var permissionManager: PermissionsManager
@@ -72,14 +75,6 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     private lateinit var locationEngine: LocationEngine
     //for UI: icon representing user location
     private lateinit var locationLayerPlugin: LocationLayerPlugin
-
-    private lateinit var bm: Bitmap
-    private lateinit var coinIcon: com.mapbox.mapboxsdk.annotations.Icon
-    private lateinit var coinCurrency: String
-    private lateinit var coinValue: String
-    private lateinit var coinColour: String
-    private lateinit var coinSymbol: String
-    private lateinit var coinId: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -196,7 +191,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
             Log.d(tag, "[setCameraPosition] location is null")
         } else {
             map?.animateCamera(CameraUpdateFactory.newLatLngZoom(
-                    LatLng(location.latitude, location.longitude), 15.0))
+                    LatLng(location.latitude, location.longitude), 15.5))
         }
     }
 
@@ -215,26 +210,28 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
             if (f.geometry() is Point) {
                 val coordinates = (f.geometry() as Point).coordinates()
 
-                coinValue = f.properties()?.get("value").toString().removeSurrounding("\"")
-                coinColour = f.properties()?.get("marker-color").toString()
+                val coinValue = f.properties()?.get("value").toString().removeSurrounding("\"")
+                val coinColour = f.properties()?.get("marker-color").toString()
                         .removeSurrounding("\"").removePrefix("#")
-                coinSymbol = f.properties()?.get("marker-symbol").toString()
+                val coinSymbol = f.properties()?.get("marker-symbol").toString()
                         .removeSurrounding("\"")
-                coinCurrency = f.properties()?.get("currency").toString()
+                val coinCurrency = f.properties()?.get("currency").toString()
                         .removeSurrounding("\"")
-                coinId = f.properties()?.get("id").toString()
+                val coinId = f.properties()?.get("id").toString()
                         .removeSurrounding("\"")
 
                 val pin = "pin_$coinSymbol" + "_$coinColour"
                 val resID = resources.getIdentifier(pin, "drawable", packageName)
-                bm = BitmapFactory.decodeResource(resources, resID)
-                coinIcon = IconFactory.getInstance(this).fromBitmap(bm)
+                val bm = BitmapFactory.decodeResource(resources, resID)
+                val coinIcon = IconFactory.getInstance(this).fromBitmap(bm)
 
                 val markerOpt  = MarkerOptions().position(LatLng(coordinates[1], coordinates[0]))
-                        .title("$coinCurrency $coinValue").icon(coinIcon).snippet(coinId)
+                        .title("$coinCurrency $coinValue").icon(coinIcon)
                 // We need the marker, not the marker option saved in the list, so we can remove it later
                 val marker: Marker? = map?.addMarker(markerOpt)
-                markers.add(marker)
+                val coinDetails = listOf(coinId, coinCurrency, coinValue)
+                val pair = Pair(coinDetails, marker)
+                markerPairs.add(pair)
             }
 
         }
@@ -269,17 +266,21 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     private fun nearCoin(location: Location?) {
         if (::features.isInitialized) {
             //check if player is near a coin
-            for (marker: Marker? in markers) {
-                    val coinLocation = Location("")
+            for (p: Pair<List<String>, Marker?> in markerPairs) {
+                val coinLocation = Location("")
+                val marker = p.second
                 if (marker != null) {
                     coinLocation.latitude = marker.position.latitude
                     coinLocation.longitude = marker.position.longitude
                     //player is within 25 metres of the coin
                     if (location!!.distanceTo(coinLocation) <= 25) {
-                        val id = marker.snippet
+                        val coinDetails = p.first
+                        val coinId = coinDetails[0]
+                        // coin id is added to your coin collection
+                        coins.add(coinId)
                         val builder = AlertDialog.Builder(this@MainActivity)
-                        builder.setTitle("Near a coin")
-                        builder.setMessage("You're near coin $id")
+                        builder.setTitle("Coin collected")
+                        builder.setMessage("You collected coin $coinId!")
                         val dialog: AlertDialog = builder.create()
                         dialog.show()
                         // coin is deleted from map
