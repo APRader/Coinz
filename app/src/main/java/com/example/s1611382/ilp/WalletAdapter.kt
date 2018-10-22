@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import kotlinx.android.synthetic.main.coin_text_view.view.*
 
-class WalletAdapter(private val myDataset: MutableList<String>) :
+class WalletAdapter(private val myDataset: ArrayList<String>) :
         RecyclerView.Adapter<WalletAdapter.MyViewHolder>() {
 
     class MyViewHolder(view: View) : RecyclerView.ViewHolder(view) {

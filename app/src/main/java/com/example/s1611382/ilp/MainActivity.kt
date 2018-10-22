@@ -61,7 +61,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     // each item in the list contains a marker and the details of the corresponding coin
     private var markerPairs: MutableList<Pair<List<String>, Marker?>> = mutableListOf()
 
-    var coins: MutableList<String> = mutableListOf()
+    var coins: ArrayList<String> = arrayListOf()
 
     private lateinit var mDrawerLayout: DrawerLayout
     private lateinit var permissionManager: PermissionsManager
@@ -75,6 +75,10 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     private lateinit var locationEngine: LocationEngine
     //for UI: icon representing user location
     private lateinit var locationLayerPlugin: LocationLayerPlugin
+
+    companion object {
+        val COINS = "coins"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -155,7 +159,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     @SuppressLint("MissingPermission")
     private fun initializeLocationEngine() {
         locationEngine = LocationEngineProvider(this).obtainBestLocationEngineAvailable()
-        locationEngine.addLocationEngineListener(this)
+        //locationEngine.addLocationEngineListener(this)
         locationEngine.apply {
             interval = 5000
             fastestInterval = 1000
@@ -167,7 +171,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         if (lastLocation != null) {
             originLocation = lastLocation
             setCameraPosition(lastLocation)
-        } //else { locationEngine.addLocationEngineListener(this) }
+        } else { locationEngine.addLocationEngineListener(this) }
     }
 
     private fun initializeLocationLayer() {
@@ -197,6 +201,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
     private fun openWallet() {
         val intent = Intent(this, Wallet::class.java)
+        intent.putExtra(COINS, coins)
         startActivity(intent)
     }
 
@@ -266,7 +271,10 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     private fun nearCoin(location: Location?) {
         if (::features.isInitialized) {
             //check if player is near a coin
-            for (p: Pair<List<String>, Marker?> in markerPairs) {
+            // need to use iterator, to be able to remove pair in loop
+            var it = markerPairs.iterator()
+            while (it.hasNext()) {
+                var p = it.next()
                 val coinLocation = Location("")
                 val marker = p.second
                 if (marker != null) {
@@ -283,8 +291,9 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
                         builder.setMessage("You collected coin $coinId!")
                         val dialog: AlertDialog = builder.create()
                         dialog.show()
-                        // coin is deleted from map
+                        // coin is deleted from map and markerPairs
                         map?.removeMarker(marker)
+                        it.remove()
                     }
                 }
             }

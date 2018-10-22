@@ -16,12 +16,16 @@ class Wallet : Activity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var viewAdapter: RecyclerView.Adapter<*>
     private lateinit var viewManager: RecyclerView.LayoutManager
-    val myDataset: MutableList<String> = mutableListOf("this", "is", "definitely", "not", "going", "to", "work",
-            "at", "all", ":(", "yeet!", "Get", "spooked")
+
+
+     //arrayListOf("this", "is", "definitely", "not", "going", "to", "work",
+            //"at", "all", ":(", "yeet!", "Get", "spooked")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.wallet)
+
+        val myDataset: ArrayList<String> = intent.extras.getStringArrayList(MainActivity.COINS)
 
         viewManager = LinearLayoutManager(this)
         viewAdapter = WalletAdapter(myDataset)
