@@ -48,6 +48,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineListener, OnMapReadyCallback {
@@ -58,10 +59,12 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     private var downloadDate = "" // Format: YYYY/MM/DD
     private var lastJson = ""
     private val preferencesFile = "MyPrefsFile" // for storing preferences
-    // each item in the list contains a marker and the details of the corresponding coin
-    private var markerPairs: MutableList<Pair<List<String>, Marker?>> = mutableListOf()
 
-    var coins: ArrayList<String> = arrayListOf()
+    // each item in the list contains a coin and its corresponding marker
+    private var markerPairs: MutableList<Pair<Coin, Marker?>> = mutableListOf()
+
+    // each item in the list contains a coin with its different properties
+    private var coinWallet : ArrayList<Coin> = arrayListOf()
 
     private lateinit var mDrawerLayout: DrawerLayout
     private lateinit var permissionManager: PermissionsManager
@@ -77,7 +80,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     private lateinit var locationLayerPlugin: LocationLayerPlugin
 
     companion object {
-        val COINS = "coins"
+        val COINWALLET = "coinWallet"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -201,7 +204,8 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
     private fun openWallet() {
         val walletIntent = Intent(this, Wallet::class.java)
-        walletIntent.putExtra(COINS, coins)
+        walletIntent.putExtra(COINWALLET, coinWallet)
+        //walletIntent.putExtra(COINS, coinWallet)
 
         //val pendingIntent: PendingIntent? = TaskStackBuilder.create(this)
         //        .addNextIntentWithParentStack(walletIntent)
@@ -231,6 +235,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
                 val coinId = f.properties()?.get("id").toString()
                         .removeSurrounding("\"")
 
+                // getting the Icon for the specific coin using BitmapFactory
                 val pin = "pin_$coinSymbol" + "_$coinColour"
                 val resID = resources.getIdentifier(pin, "drawable", packageName)
                 val bm = BitmapFactory.decodeResource(resources, resID)
@@ -240,8 +245,8 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
                         .title("$coinCurrency $coinValue").icon(coinIcon)
                 // We need the marker, not the marker option saved in the list, so we can remove it later
                 val marker: Marker? = map?.addMarker(markerOpt)
-                val coinDetails = listOf(coinId, coinCurrency, coinValue)
-                val pair = Pair(coinDetails, marker)
+                val coin = Coin(id = coinId, value = coinValue.toFloat(), currency = coinCurrency)
+                val pair = Pair(coin, marker)
                 markerPairs.add(pair)
             }
 
@@ -288,10 +293,9 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
                     coinLocation.longitude = marker.position.longitude
                     //player is within 25 metres of the coin
                     if (location!!.distanceTo(coinLocation) <= 25) {
-                        val coinDetails = p.first
-                        val coinId = coinDetails[0]
-                        // coin id is added to your coin collection
-                        coins.add(coinId)
+                        val coin = p.first
+                        val coinId = coin.id
+                        coinWallet.add(coin)
                         val builder = AlertDialog.Builder(this@MainActivity)
                         builder.setTitle("Coin collected")
                         builder.setMessage("You collected coin $coinId!")

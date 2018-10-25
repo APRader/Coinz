@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import kotlinx.android.synthetic.main.coin_text_view.view.*
 
-class WalletAdapter(private val myDataset: ArrayList<String>) :
+class WalletAdapter(private val myDataset: ArrayList<Coin>) :
         RecyclerView.Adapter<WalletAdapter.MyViewHolder>() {
 
     class MyViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -20,7 +20,7 @@ class WalletAdapter(private val myDataset: ArrayList<String>) :
     }
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-        holder.textView.text = myDataset[position]
+        holder.textView.text = myDataset[position].toString()
     }
 
     override fun getItemCount() = myDataset.size

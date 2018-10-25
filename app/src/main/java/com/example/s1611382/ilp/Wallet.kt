@@ -25,9 +25,6 @@ class Wallet : AppCompatActivity() {
 
     private lateinit var mDrawerLayout: DrawerLayout
 
-     //arrayListOf("this", "is", "definitely", "not", "going", "to", "work",
-            //"at", "all", ":(", "yeet!", "Get", "spooked")
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.wallet)
@@ -57,7 +54,7 @@ class Wallet : AppCompatActivity() {
             setHomeAsUpIndicator(R.drawable.ic_menu)
         }
 
-        val myDataset: ArrayList<String> = intent.extras.getStringArrayList(MainActivity.COINS)
+        val myDataset: ArrayList<Coin> = intent.extras.getParcelableArrayList(MainActivity.COINWALLET)
 
         viewManager = LinearLayoutManager(this)
         viewAdapter = WalletAdapter(myDataset)
