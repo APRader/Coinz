@@ -1,12 +1,11 @@
 package com.example.s1611382.ilp
 
 import android.annotation.SuppressLint
+import android.app.PendingIntent
+import android.app.TaskStackBuilder
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.drawable.DrawableWrapper
-import android.graphics.drawable.Icon
 import android.location.Location
 import android.os.AsyncTask
 import android.support.v7.app.AppCompatActivity
@@ -42,6 +41,7 @@ import com.mapbox.mapboxsdk.annotations.IconFactory
 import com.mapbox.mapboxsdk.annotations.Marker
 import com.mapbox.mapboxsdk.annotations.MarkerOptions
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback
+import kotlinx.android.synthetic.main.wallet.*
 import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection
@@ -200,9 +200,15 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     }
 
     private fun openWallet() {
-        val intent = Intent(this, Wallet::class.java)
-        intent.putExtra(COINS, coins)
-        startActivity(intent)
+        val walletIntent = Intent(this, Wallet::class.java)
+        walletIntent.putExtra(COINS, coins)
+
+        //val pendingIntent: PendingIntent? = TaskStackBuilder.create(this)
+        //        .addNextIntentWithParentStack(walletIntent)
+        //        .getPendingIntent(0,PendingIntent.FLAG_UPDATE_CURRENT)
+
+
+        startActivity(walletIntent)
     }
 
     private fun drawCoinLocations(JsonFile : String?) {
