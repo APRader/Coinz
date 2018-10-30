@@ -20,6 +20,8 @@ import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import com.example.s1611382.ilp.MainActivity.DownloadCompleteRunner.result
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineListener
 import com.mapbox.android.core.location.LocationEnginePriority
@@ -205,7 +207,6 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     private fun openWallet() {
         val walletIntent = Intent(this, Wallet::class.java)
         walletIntent.putExtra(COINWALLET, coinWallet)
-        //walletIntent.putExtra(COINS, coinWallet)
 
         //val pendingIntent: PendingIntent? = TaskStackBuilder.create(this)
         //        .addNextIntentWithParentStack(walletIntent)
@@ -248,6 +249,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
                 val coin = Coin(id = coinId, value = coinValue.toFloat(), currency = coinCurrency)
                 val pair = Pair(coin, marker)
                 markerPairs.add(pair)
+
             }
 
         }
@@ -429,6 +431,13 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         downloadDate = settings.getString("lastDownloadDate", "")
         lastJson = settings.getString("lastJson", "")
 
+        // converting json string from sharedPrefs into coin list again
+        val gson= Gson()
+        val json = settings.getString("lastCoinWallet", "")
+        val type = object : TypeToken<ArrayList<Coin>>() {}.type
+        coinWallet = gson.fromJson<ArrayList<Coin>>(json, type)
+        print("aes")
+
         Log.d(tag, "[onStart] Recalled lastDownloadDate is '$downloadDate'")
         Log.d(tag, "[onStart] Recalled lastJson is '$lastJson'")
     }
@@ -442,8 +451,9 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     }
     override fun onStop() {
         super.onStop()
-        locationEngine.removeLocationUpdates()
-        locationLayerPlugin.onStop()
+        // the next two lines break the location listening when you go out and into the app
+        //locationEngine.removeLocationUpdates()
+        //locationLayerPlugin.onStop()
         mapView?.onStop()
 
         Log.d(tag, "[onStop] Storing lastDownloadDate of $downloadDate")
@@ -456,6 +466,12 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         val editor = settings.edit()
         editor.putString("lastDownloadDate", downloadDate)
         editor.putString("lastJson", lastJson)
+
+        // to save coinWallet, we need to convert it into JSON using GSON
+        val gson = Gson()
+        val json = gson.toJson(coinWallet)
+        editor.putString("lastCoinWallet", json)
+
         // Apply the edits!
         editor.apply()
     }
