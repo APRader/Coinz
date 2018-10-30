@@ -235,20 +235,22 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
                         .removeSurrounding("\"")
                 val coinId = f.properties()?.get("id").toString()
                         .removeSurrounding("\"")
-
-                // getting the Icon for the specific coin using BitmapFactory
-                val pin = "pin_$coinSymbol" + "_$coinColour"
-                val resID = resources.getIdentifier(pin, "drawable", packageName)
-                val bm = BitmapFactory.decodeResource(resources, resID)
-                val coinIcon = IconFactory.getInstance(this).fromBitmap(bm)
-
-                val markerOpt  = MarkerOptions().position(LatLng(coordinates[1], coordinates[0]))
-                        .title("$coinCurrency $coinValue").icon(coinIcon)
-                // We need the marker, not the marker option saved in the list, so we can remove it later
-                val marker: Marker? = map?.addMarker(markerOpt)
                 val coin = Coin(id = coinId, value = coinValue.toFloat(), currency = coinCurrency)
-                val pair = Pair(coin, marker)
-                markerPairs.add(pair)
+                // check if coin is already in wallet, so we only draw coins that have not been collected
+                if (!coinWallet.contains(coin)) {
+                    // getting the Icon for the specific coin using BitmapFactory
+                    val pin = "pin_$coinSymbol" + "_$coinColour"
+                    val resID = resources.getIdentifier(pin, "drawable", packageName)
+                    val bm = BitmapFactory.decodeResource(resources, resID)
+                    val coinIcon = IconFactory.getInstance(this).fromBitmap(bm)
+
+                    val markerOpt = MarkerOptions().position(LatLng(coordinates[1], coordinates[0]))
+                            .title("$coinCurrency $coinValue").icon(coinIcon)
+                    // We need the marker, not the marker option saved in the list, so we can remove it later
+                    val marker: Marker? = map?.addMarker(markerOpt)
+                    val pair = Pair(coin, marker)
+                    markerPairs.add(pair)
+                }
 
             }
 
@@ -433,7 +435,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
         // converting json string from sharedPrefs into coin list again
         val gson= Gson()
-        val json = settings.getString("lastCoinWallet", "")
+        val json = settings.getString("lastCoinWallet", "[]")
         val type = object : TypeToken<ArrayList<Coin>>() {}.type
         coinWallet = gson.fromJson<ArrayList<Coin>>(json, type)
         print("aes")
