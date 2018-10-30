@@ -3,6 +3,7 @@ package com.example.s1611382.ilp
 import android.app.Activity
 import android.app.ListActivity
 import android.app.LoaderManager
+import android.content.Intent
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.support.design.widget.NavigationView
@@ -40,7 +41,9 @@ class Wallet : AppCompatActivity() {
 
             // Add code here to update the UI based on the item selected
             // For example, swap UI fragments here
-
+            if (menuItem.itemId == R.id.nav_map) {
+                openMap()
+            }
             true
         }
 
@@ -65,6 +68,13 @@ class Wallet : AppCompatActivity() {
         }
 
     }
+
+    private fun openMap() {
+        //val mapIntent = Intent(this, MainActivity::class.java)
+        //startActivity(mapIntent)
+        finish()
+    }
+
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         return when (item?.itemId) {
