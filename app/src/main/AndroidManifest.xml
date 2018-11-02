@@ -21,6 +21,7 @@
             </intent-filter>
             </activity>
         <activity android:name=".Wallet"/>
+        <activity android:name=".Bank"/>
     </application>
 
     </manifest>

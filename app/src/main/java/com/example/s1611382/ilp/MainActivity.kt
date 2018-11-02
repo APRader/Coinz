@@ -44,6 +44,7 @@ import com.mapbox.mapboxsdk.annotations.Marker
 import com.mapbox.mapboxsdk.annotations.MarkerOptions
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback
 import kotlinx.android.synthetic.main.wallet.*
+import org.json.JSONObject
 import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection
@@ -75,6 +76,8 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     //contains GeoJson features
     private lateinit var coinCollection: FeatureCollection
     private lateinit var features: List<Feature>
+    // order of exchange rates: SHIL, DOLR, QUID, PENY
+    private var rates: MutableList<Float> = mutableListOf()
 
     //gives user location
     private lateinit var locationEngine: LocationEngine
@@ -108,8 +111,6 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
         val navigationView: NavigationView = findViewById(R.id.nav_view)
         navigationView.setNavigationItemSelectedListener { menuItem ->
-            // set item as selected to persist highlight
-            menuItem.isChecked = true
             // close drawer when item is tapped
             mDrawerLayout.closeDrawers()
 
@@ -118,7 +119,9 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
             if (menuItem.itemId == R.id.nav_wallet) {
                 openWallet()
             }
-
+            if (menuItem.itemId == R.id.nav_bank) {
+                openBank()
+            }
             true
         }
 
@@ -207,13 +210,12 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     private fun openWallet() {
         val walletIntent = Intent(this, Wallet::class.java)
         walletIntent.putExtra(COINWALLET, coinWallet)
-
-        //val pendingIntent: PendingIntent? = TaskStackBuilder.create(this)
-        //        .addNextIntentWithParentStack(walletIntent)
-        //        .getPendingIntent(0,PendingIntent.FLAG_UPDATE_CURRENT)
-
-
         startActivity(walletIntent)
+    }
+
+    private fun openBank() {
+        val bankIntent = Intent(this, Bank::class.java)
+        startActivity(bankIntent)
     }
 
     private fun drawCoinLocations(JsonFile : String?) {
@@ -221,6 +223,19 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         coinCollection = FeatureCollection.fromJson(JsonFile.toString())
 
         features = coinCollection.features() as List<Feature>
+
+        val reader = JSONObject(JsonFile.toString())
+        val sys = reader.getJSONObject("rates")
+        val shil = sys.getString("SHIL").toFloat()
+        val dolr = sys.getString("DOLR").toFloat()
+        val quid = sys.getString("QUID").toFloat()
+        val peny = sys.getString("PENY").toFloat()
+        rates.apply {
+            add(shil)
+            add(dolr)
+            add(quid)
+            add(peny)
+        }
 
         for (f: Feature in features) {
             if (f.geometry() is Point) {
@@ -425,7 +440,11 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     override fun onStart() {
         super.onStart()
         mapView?.onStart()
-
+        // in order for location to work, we start the location engine again
+        if (::locationLayerPlugin.isInitialized) {
+            locationLayerPlugin.onStart()
+            locationEngine.requestLocationUpdates()
+        }
         // Restore preferences
         val settings = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE)
 
@@ -438,7 +457,6 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         val json = settings.getString("lastCoinWallet", "[]")
         val type = object : TypeToken<ArrayList<Coin>>() {}.type
         coinWallet = gson.fromJson<ArrayList<Coin>>(json, type)
-        print("aes")
 
         Log.d(tag, "[onStart] Recalled lastDownloadDate is '$downloadDate'")
         Log.d(tag, "[onStart] Recalled lastJson is '$lastJson'")
@@ -454,8 +472,8 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     override fun onStop() {
         super.onStop()
         // the next two lines break the location listening when you go out and into the app
-        //locationEngine.removeLocationUpdates()
-        //locationLayerPlugin.onStop()
+        locationEngine.removeLocationUpdates()
+        locationLayerPlugin.onStop()
         mapView?.onStop()
 
         Log.d(tag, "[onStop] Storing lastDownloadDate of $downloadDate")
