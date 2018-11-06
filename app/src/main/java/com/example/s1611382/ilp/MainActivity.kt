@@ -224,7 +224,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
         features = coinCollection.features() as List<Feature>
 
-        val reader = JSONObject(JsonFile.toString())
+        val reader = JSONObject(lastJson.toString())
         val sys = reader.getJSONObject("rates")
         val shil = sys.getString("SHIL").toFloat()
         val dolr = sys.getString("DOLR").toFloat()

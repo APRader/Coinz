@@ -3,6 +3,7 @@ package com.example.s1611382.ilp
 import android.app.Activity
 import android.app.ListActivity
 import android.app.LoaderManager
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.PersistableBundle
@@ -17,6 +18,8 @@ import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.ThemedSpinnerAdapter
 import android.support.v7.widget.Toolbar
 import android.view.MenuItem
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.android.synthetic.main.wallet.view.*
 
 class Wallet : AppCompatActivity() {
@@ -24,36 +27,18 @@ class Wallet : AppCompatActivity() {
     private lateinit var viewAdapter: RecyclerView.Adapter<*>
     private lateinit var viewManager: RecyclerView.LayoutManager
 
-    private lateinit var mDrawerLayout: DrawerLayout
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.wallet)
-
-        mDrawerLayout = findViewById(R.id.drawer_layout)
-
-        val navigationView: NavigationView = findViewById(R.id.nav_view)
-        navigationView.setNavigationItemSelectedListener { menuItem ->
-            // close drawer when item is tapped
-            mDrawerLayout.closeDrawers()
-
-            // Add code here to update the UI based on the item selected
-            // For example, swap UI fragments here
-            if (menuItem.itemId == R.id.nav_map) {
-                openMap()
-            }
-            true
-        }
 
         //need toolbar for app nav drawer button
 
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
         val actionbar: ActionBar? = supportActionBar
-        actionbar?.apply {
-            setDisplayHomeAsUpEnabled(true)
-            setHomeAsUpIndicator(R.drawable.ic_menu)
-        }
+        // creates up navigation to get back to parent activity (main map)
+        actionbar?.setDisplayHomeAsUpEnabled(true)
+
 
         val myDataset: ArrayList<Coin> = intent.extras.getParcelableArrayList(MainActivity.COINWALLET)
 
@@ -67,18 +52,4 @@ class Wallet : AppCompatActivity() {
 
     }
 
-    private fun openMap() {
-        finish()
-    }
-
-
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        return when (item?.itemId) {
-            android.R.id.home -> {
-                mDrawerLayout.openDrawer(GravityCompat.START)
-                true
-            }
-            else ->super.onOptionsItemSelected(item)
-        }
-    }
 }
