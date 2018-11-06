@@ -76,8 +76,8 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     //contains GeoJson features
     private lateinit var coinCollection: FeatureCollection
     private lateinit var features: List<Feature>
-    // order of exchange rates: SHIL, DOLR, QUID, PENY
-    private var rates: MutableList<Float> = mutableListOf()
+    // exchange rates of the day
+    private var rates: ArrayList<Pair<String, Float>> = arrayListOf()
 
     //gives user location
     private lateinit var locationEngine: LocationEngine
@@ -86,6 +86,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
     companion object {
         val COINWALLET = "coinWallet"
+        val RATES = "rates"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -215,6 +216,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
     private fun openBank() {
         val bankIntent = Intent(this, Bank::class.java)
+        bankIntent.putExtra(RATES, rates)
         startActivity(bankIntent)
     }
 
@@ -231,10 +233,10 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         val quid = sys.getString("QUID").toFloat()
         val peny = sys.getString("PENY").toFloat()
         rates.apply {
-            add(shil)
-            add(dolr)
-            add(quid)
-            add(peny)
+            add(Pair("SHIL", shil))
+            add(Pair("DOLR", dolr))
+            add(Pair("QUID", quid))
+            add(Pair("PENY", peny))
         }
 
         for (f: Feature in features) {
