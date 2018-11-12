@@ -39,10 +39,10 @@ class Wallet : AppCompatActivity() {
         // creates up navigation to get back to parent activity (main map)
         actionbar?.setDisplayHomeAsUpEnabled(true)
 
-        val myDataset: ArrayList<Coin> = intent.extras.getParcelableArrayList(MainActivity.COINWALLET)
+        val coinWallet: ArrayList<Coin> = intent.extras.getParcelableArrayList(MainActivity.COINWALLET)
 
         viewManager = LinearLayoutManager(this)
-        viewAdapter = WalletAdapter(myDataset)
+        viewAdapter = WalletAdapter(coinWallet)
 
         recyclerView = findViewById<RecyclerView>(R.id.wallet).apply {
             layoutManager = viewManager

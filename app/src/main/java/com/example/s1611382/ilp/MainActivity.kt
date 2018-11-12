@@ -217,6 +217,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     private fun openBank() {
         val bankIntent = Intent(this, Bank::class.java)
         bankIntent.putExtra(RATES, rates)
+        bankIntent.putExtra(COINWALLET, coinWallet)
         startActivity(bankIntent)
     }
 
