@@ -287,6 +287,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
             lastJson = task.execute("http://homepages.inf.ed.ac.uk/stg/coinz/$today/coinzmap.geojson").get()
         }
         // check if Json contains valid coin data (i.e. download was successful)
+
         if (lastJson.startsWith("\n{\n")){
             drawCoinLocations(lastJson)
             //only update download date if download was successful and coins are drawn

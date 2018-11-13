@@ -12,26 +12,24 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.R.attr.prompt
+import android.widget.ListAdapter
 import android.widget.Toast
 
-
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
 class WalletFragment : ListFragment() {
-    private var test = listOf("January", "February", "March", "April", "May", "June")
+    private lateinit var coinWallet: ArrayList<Coin>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val walletListAdapter = ArrayAdapter<String>(
+        coinWallet = arguments!!.getParcelableArrayList(Bank.COINWALLET)
+
+        val walletListAdapter = ArrayAdapter<Coin>(
                 activity,
                 android.R.layout.simple_list_item_multiple_choice,
-                test)
+                coinWallet)
 
         listAdapter = walletListAdapter
+
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,

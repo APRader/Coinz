@@ -25,6 +25,9 @@ class Bank: AppCompatActivity() {
     private lateinit var rates: ArrayList<Coin>
     private lateinit var coinWallet: ArrayList<Coin>
 
+    companion object {
+        val COINWALLET = "coinWallet"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,8 +54,12 @@ class Bank: AppCompatActivity() {
             val fragmentManager = supportFragmentManager
             val fragmentTransaction = fragmentManager.beginTransaction()
             val fragment = WalletFragment()
+            val args = Bundle()
+            args.putParcelableArrayList(COINWALLET, coinWallet)
+            fragment.arguments = args
             fragmentTransaction.add(R.id.bank_id, fragment)
             fragmentTransaction.commit()
+
         }
     }
 
