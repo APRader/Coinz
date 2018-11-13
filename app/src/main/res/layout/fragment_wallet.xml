@@ -14,10 +14,10 @@
         android:choiceMode="multipleChoice"
         android:drawSelectorOnTop="false" />
 
-    <TextView
-        android:id="@id/android:empty"
+    <Button
+        android:id="@+id/deposit_coins_id"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="No data" />
+        android:layout_height="wrap_content"
+        android:text="@string/coin_deposit" />
 
 </LinearLayout>

@@ -29,4 +29,15 @@
         android:layout_height="wrap_content"
         android:text="@string/deposit" />
 
+    <FrameLayout
+        android:id="@+id/deposit_placeholder"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/convert_button_id"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/convert" />
+
 </LinearLayout>

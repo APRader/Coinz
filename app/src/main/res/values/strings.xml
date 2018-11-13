@@ -6,6 +6,8 @@
     <string name="bank">Bank</string>
     <string name="map">Main map</string>
     <string name="deposit">Make deposit</string>
+    <string name="coin_deposit">Deposit selected coins</string>
+    <string name="convert">Convert coins in bank to GOLD</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>

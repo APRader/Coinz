@@ -18,15 +18,18 @@ import kotlinx.android.synthetic.main.coin_text_view.view.*
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.ArrayList
 
-class Bank: AppCompatActivity() {
+class Bank: AppCompatActivity(), WalletFragment.OnCoinsDeposited {
     private val preferencesFile = "MyPrefsFile" // for storing preferences
     private var gold: Double? = 0.0
     private lateinit var rates: ArrayList<Coin>
     private lateinit var coinWallet: ArrayList<Coin>
+    private var coinBank : ArrayList<Coin> = arrayListOf()
 
     companion object {
         val COINWALLET = "coinWallet"
+        val COINBANK = "coinBank"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,11 +59,16 @@ class Bank: AppCompatActivity() {
             val fragment = WalletFragment()
             val args = Bundle()
             args.putParcelableArrayList(COINWALLET, coinWallet)
+            args.putParcelableArrayList(COINBANK, coinBank)
             fragment.arguments = args
-            fragmentTransaction.add(R.id.bank_id, fragment)
+            fragmentTransaction.replace(R.id.deposit_placeholder, fragment)
             fragmentTransaction.commit()
 
         }
+    }
+
+    override fun onCoinsDeposited(coinWallet: ArrayList<Coin>, coinBank: ArrayList<Coin>) {
+        print(coinWallet)
     }
 
     override fun onStart() {
@@ -72,6 +80,11 @@ class Bank: AppCompatActivity() {
         }
         val goldView: TextView = findViewById(R.id.gold_id)
         goldView.text = "Your GOLD: " + gold.toString()
+
+        val gson= Gson()
+        val json = settings.getString("lastCoinBank", "[]")
+        val type = object : TypeToken<ArrayList<Coin>>() {}.type
+        coinBank = gson.fromJson<ArrayList<Coin>>(json, type)
     }
 
     override fun onStop() {
@@ -79,6 +92,9 @@ class Bank: AppCompatActivity() {
         val settings = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE)
         val editor = settings.edit()
         editor.putString("lastGold", gold.toString())
+        val gson = Gson()
+        val json = gson.toJson(coinBank)
+        editor.putString("lastCoinBank", json)
         editor.apply()
     }
 
