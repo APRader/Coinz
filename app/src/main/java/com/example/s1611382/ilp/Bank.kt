@@ -10,6 +10,7 @@ import android.support.v7.app.ActionBar
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.view.MenuItem
+import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import com.google.gson.Gson
@@ -49,9 +50,12 @@ class Bank: AppCompatActivity(), WalletFragment.OnCoinsDeposited {
 
         val depositButton: Button = findViewById(R.id.deposit_button_id)
         depositButton.setOnClickListener {
-            gold = gold?.plus(1)
-            val goldView: TextView = findViewById(R.id.gold_id)
-            goldView.text = "Your GOLD: " + gold.toString()
+            //gold = gold?.plus(1)
+            //val goldView: TextView = findViewById(R.id.gold_id)
+            //goldView.text = "Your GOLD: " + gold.toString()
+
+            // hiding deposit button so user can't add more than one WalletFragment
+            depositButton.visibility = View.GONE
 
             //make fragment to show list of coins from which to choose from
             val fragmentManager = supportFragmentManager
@@ -62,13 +66,23 @@ class Bank: AppCompatActivity(), WalletFragment.OnCoinsDeposited {
             args.putParcelableArrayList(COINBANK, coinBank)
             fragment.arguments = args
             fragmentTransaction.replace(R.id.deposit_placeholder, fragment)
+            // adding to stack so we can pop it when we finish depositing coins (or when user presses back button)
+            fragmentTransaction.addToBackStack("WalletFragment")
             fragmentTransaction.commit()
-
         }
     }
 
-    override fun onCoinsDeposited(coinWallet: ArrayList<Coin>, coinBank: ArrayList<Coin>) {
-        print(coinWallet)
+    override fun onCoinsDeposited(depositedCoins: ArrayList<Coin>) {
+        for (coin in depositedCoins) {
+            coinWallet.remove(coin)
+            coinBank.add(coin)
+        }
+        // removes last fragment from stack (which is WalletFragment)
+        val fragmentManager = supportFragmentManager
+        fragmentManager.popBackStack()
+        // add deposit button again, so user can deposit again
+        val depositButton: Button = findViewById(R.id.deposit_button_id)
+        depositButton.visibility = View.VISIBLE
     }
 
     override fun onStart() {
@@ -88,7 +102,7 @@ class Bank: AppCompatActivity(), WalletFragment.OnCoinsDeposited {
     }
 
     override fun onStop() {
-        super.onStop()
+         super.onStop()
         val settings = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE)
         val editor = settings.edit()
         editor.putString("lastGold", gold.toString())
@@ -100,6 +114,22 @@ class Bank: AppCompatActivity(), WalletFragment.OnCoinsDeposited {
 
     override fun onPause() {
         super.onPause()
+        // need to change values in wallet shared prefs before onStart of map is called, because it uses wallet
+        val settings = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE)
+        val editor = settings.edit()
+        val gson = Gson()
+        val json = gson.toJson(coinWallet)
+        editor.putString("lastCoinWallet", json)
+        editor.apply()
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        // when user presses back button, fragment will be closed, so we need to set button that launched fragment to visible
+        val depositButton: Button = findViewById(R.id.deposit_button_id)
+        if (depositButton.visibility == View.GONE) {
+            depositButton.visibility = View.VISIBLE
+        }
     }
 
 }

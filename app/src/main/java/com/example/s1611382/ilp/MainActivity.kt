@@ -69,6 +69,9 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     // each item in the list contains a coin with its different properties
     private var coinWallet : ArrayList<Coin> = arrayListOf()
 
+    //different from wallet: it stores which coins were collected today, you can empty wallet, but not this
+    private var collectedCoins : ArrayList<String> = arrayListOf()
+
     private lateinit var mDrawerLayout: DrawerLayout
     private lateinit var permissionManager: PermissionsManager
     //stores current location at all times
@@ -254,8 +257,8 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
                 val coinId = f.properties()?.get("id").toString()
                         .removeSurrounding("\"")
                 val coin = Coin(id = coinId, value = coinValue.toFloat(), currency = coinCurrency)
-                // check if coin is already in wallet, so we only draw coins that have not been collected
-                if (!coinWallet.contains(coin)) {
+                // don't draw coin if it was already collected
+                if (!collectedCoins.contains(coin.id)) {
                     // getting the Icon for the specific coin using BitmapFactory
                     val pin = "pin_$coinSymbol" + "_$coinColour"
                     val resID = resources.getIdentifier(pin, "drawable", packageName)
@@ -319,6 +322,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
                         val coin = p.first
                         val coinId = coin.id
                         coinWallet.add(coin)
+                        collectedCoins.add(coin.id)
                         val builder = AlertDialog.Builder(this@MainActivity)
                         builder.setTitle("Coin collected")
                         builder.setMessage("You collected coin $coinId!")
@@ -458,9 +462,13 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
         // converting json string from sharedPrefs into coin list again
         val gson= Gson()
-        val json = settings.getString("lastCoinWallet", "[]")
-        val type = object : TypeToken<ArrayList<Coin>>() {}.type
+        var json = settings.getString("lastCoinWallet", "[]")
+        var type = object : TypeToken<ArrayList<Coin>>() {}.type
         coinWallet = gson.fromJson<ArrayList<Coin>>(json, type)
+
+        json = settings.getString("collectedCoins", "[]")
+        type = object : TypeToken<ArrayList<String>>() {}.type
+        collectedCoins = gson.fromJson(json, type)
 
         Log.d(tag, "[onStart] Recalled lastDownloadDate is '$downloadDate'")
         Log.d(tag, "[onStart] Recalled lastJson is '$lastJson'")
@@ -493,8 +501,8 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
         // to save coinWallet, we need to convert it into JSON using GSON
         val gson = Gson()
-        val json = gson.toJson(coinWallet)
-        editor.putString("lastCoinWallet", json)
+        editor.putString("lastCoinWallet", gson.toJson(coinWallet))
+        editor.putString("collectedCoins", gson.toJson(collectedCoins))
 
         // Apply the edits!
         editor.apply()

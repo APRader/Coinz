@@ -15,7 +15,7 @@ import android.widget.*
 
 class WalletFragment : ListFragment() {
     private lateinit var coinWallet: ArrayList<Coin>
-    private lateinit var coinBank: ArrayList<Coin>
+    private var depositedCoins: ArrayList<Coin> = arrayListOf()
 
     private lateinit var listener: OnCoinsDeposited
 
@@ -23,7 +23,6 @@ class WalletFragment : ListFragment() {
         super.onCreate(savedInstanceState)
 
         coinWallet = arguments!!.getParcelableArrayList(Bank.COINWALLET)
-        coinBank = arguments!!.getParcelableArrayList(Bank.COINBANK)
 
         val walletListAdapter = ArrayAdapter<Coin>(
                 activity,
@@ -46,12 +45,11 @@ class WalletFragment : ListFragment() {
                 if (checkedCoins.get(i)) {
                     // all coins the user has checked will get converted when button is clicked
                     val coin = listView.getItemAtPosition(i) as Coin
-                    coinBank.add(coin)
-                    coinWallet.remove(coin)
+                    depositedCoins.add(coin)
                 }
             }
             // alert bank activity that the depositing has benn completed and pass new wallet/bank
-            listener.onCoinsDeposited(coinWallet, coinBank)
+            listener.onCoinsDeposited(depositedCoins)
         }
 
         return fragmentView
@@ -69,6 +67,6 @@ class WalletFragment : ListFragment() {
 
     // used to alert the bank activity that user has deposited coins
     interface OnCoinsDeposited {
-        fun onCoinsDeposited(coinWallet: ArrayList<Coin>, coinBank: ArrayList<Coin>)
+        fun onCoinsDeposited(depositedCoins: ArrayList<Coin>)
     }
 }
