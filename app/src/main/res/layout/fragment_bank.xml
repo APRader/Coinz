@@ -7,10 +7,10 @@
     android:paddingRight="8dp" >
 
     <Button
-        android:id="@+id/deposit_coins_id"
+        android:id="@+id/convert_coins_id"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/coin_deposit" />
+        android:text="@string/coin_convert" />
 
     <ListView
         android:id="@id/android:list"

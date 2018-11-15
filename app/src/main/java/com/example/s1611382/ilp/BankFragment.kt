@@ -13,43 +13,43 @@ import android.view.ViewGroup
 import android.R.attr.prompt
 import android.widget.*
 
-class WalletFragment : ListFragment() {
-    private lateinit var coinWallet: ArrayList<Coin>
-    private var depositedCoins: ArrayList<Coin> = arrayListOf()
+class BankFragment : ListFragment() {
+    private lateinit var coinBank: ArrayList<Coin>
+    private var convertedCoins: ArrayList<Coin> = arrayListOf()
 
-    private lateinit var listener: OnCoinsDeposited
+    private lateinit var listener: OnCoinsConverted
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        coinWallet = arguments!!.getParcelableArrayList(Bank.COINWALLET)
+        coinBank = arguments!!.getParcelableArrayList(Bank.COINBANK)
 
-        val walletListAdapter = ArrayAdapter<Coin>(
+        val bankListAdapter = ArrayAdapter<Coin>(
                 activity,
                 android.R.layout.simple_list_item_multiple_choice,
-                coinWallet)
+                coinBank)
 
-        listAdapter = walletListAdapter
+        listAdapter = bankListAdapter
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
-        val fragmentView = inflater.inflate(R.layout.fragment_wallet, container, false)
+        val fragmentView = inflater.inflate(R.layout.fragment_bank, container, false)
 
-        val depositCoinsButton: Button = fragmentView.findViewById(R.id.deposit_coins_id)
-        depositCoinsButton.setOnClickListener {
+        val convertCoinsButton: Button = fragmentView.findViewById(R.id.convert_coins_id)
+        convertCoinsButton.setOnClickListener {
             val count = listView.count
             val checkedCoins: SparseBooleanArray = listView.checkedItemPositions
             for (i in 0 until count) {
                 if (checkedCoins.get(i)) {
-                    // all coins the user has checked will get deposited when button is clicked
+                    // all coins the user has checked will get converted when button is clicked
                     val coin = listView.getItemAtPosition(i) as Coin
-                    depositedCoins.add(coin)
+                    convertedCoins.add(coin)
                 }
             }
-            // alert bank activity that the depositing has been completed and pass new wallet/bank
-            listener.onCoinsDeposited(depositedCoins)
+            // alert bank activity that the converting has been completed and pass new wallet/bank
+            listener.onCoinsConverted(convertedCoins)
         }
 
         return fragmentView
@@ -58,15 +58,15 @@ class WalletFragment : ListFragment() {
     override fun onAttach(context: Context?) {
         super.onAttach(context)
         // initalise the listener reference
-        if (context is OnCoinsDeposited) {
+        if (context is OnCoinsConverted) {
             listener = context
         } else {
-            throw ClassCastException(context.toString() + " must implement OnCoinsDeposited.")
+            throw ClassCastException(context.toString() + " must implement OnCoinsConverted.")
         }
     }
 
     // used to alert the bank activity that user has deposited coins
-    interface OnCoinsDeposited {
-        fun onCoinsDeposited(depositedCoins: ArrayList<Coin>)
+    interface OnCoinsConverted {
+        fun onCoinsConverted(convertedCoins: ArrayList<Coin>)
     }
 }

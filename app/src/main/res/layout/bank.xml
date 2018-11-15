@@ -4,7 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    style="?android:buttonBarStyle"
+    android:dividerPadding="15dp">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"
@@ -34,10 +36,20 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="5dp"
+        android:background="@android:color/darker_gray"/>
+
     <Button
         android:id="@+id/convert_button_id"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/convert" />
+
+    <FrameLayout
+        android:id="@+id/convert_placeholder"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
 </LinearLayout>

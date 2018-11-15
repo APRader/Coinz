@@ -52,6 +52,7 @@ import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 
 class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineListener, OnMapReadyCallback {
@@ -80,7 +81,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     private lateinit var coinCollection: FeatureCollection
     private lateinit var features: List<Feature>
     // exchange rates of the day
-    private var rates: ArrayList<Pair<String, Float>> = arrayListOf()
+    private var rates: HashMap<String, Float> = hashMapOf()
 
     //gives user location
     private lateinit var locationEngine: LocationEngine
@@ -237,10 +238,10 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         val quid = sys.getString("QUID").toFloat()
         val peny = sys.getString("PENY").toFloat()
         rates.apply {
-            add(Pair("SHIL", shil))
-            add(Pair("DOLR", dolr))
-            add(Pair("QUID", quid))
-            add(Pair("PENY", peny))
+            put("SHIL", shil)
+            put("DOLR", dolr)
+            put("QUID", quid)
+            put("PENY", peny)
         }
 
         for (f: Feature in features) {
