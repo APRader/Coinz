@@ -25,6 +25,9 @@
         <activity
             android:name=".Bank"
             android:parentActivityName=".MainActivity" />
+        <activity
+            android:name=".Trading"
+            android:parentActivityName=".MainActivity" />
     </application>
 
     </manifest>
