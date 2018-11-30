@@ -127,6 +127,9 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
             if (menuItem.itemId == R.id.nav_bank) {
                 openBank()
             }
+            if (menuItem.itemId == R.id.nav_trading) {
+                openTrading()
+            }
             true
         }
 
@@ -223,6 +226,11 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         bankIntent.putExtra(RATES, rates)
         bankIntent.putExtra(COINWALLET, coinWallet)
         startActivity(bankIntent)
+    }
+
+    private fun openTrading() {
+        val tradingIntent = Intent(this, Trading::class.java)
+        startActivity(tradingIntent)
     }
 
     private fun drawCoinLocations(JsonFile : String?) {
