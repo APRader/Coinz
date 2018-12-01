@@ -9,8 +9,8 @@
     <string name="coin_deposit">Deposit selected coins</string>
     <string name="convert">Convert coins in bank to GOLD</string>
     <string name="coin_convert">Convert selected coins</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="trading">Trading</string>
+    <string name="send_coins">Send coins</string>
+    <string name="logout">Log out</string>
+    <string name="email">Email address</string>
 </resources>
