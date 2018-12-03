@@ -145,11 +145,22 @@ class Bank: AppCompatActivity(), WalletFragment.OnCoinsDeposited, BankFragment.O
     }
 
     override fun onCoinsConverted(convertedCoins: ArrayList<Coin>) {
-        for (coin in convertedCoins) {
-            gold = gold?.plus(coin.value * rates[coin.currency]!!)
-            val goldView: TextView = findViewById(R.id.gold_id)
-            goldView.text = "Your GOLD: " + gold.toString()
-            coinBank.remove(coin)
+        if (rates.isEmpty()) {
+            // happens if app couldn't download rates
+            val builder = AlertDialog.Builder(this)
+            builder.setTitle("Exchange rates unavailable")
+            builder.setMessage("Coins cannot be converted. " +
+                    "Please go to the map with a working internet connection, " +
+                    "so rates can be downloaded.")
+            val dialog: AlertDialog = builder.create()
+            dialog.show()
+        } else {
+            for (coin in convertedCoins) {
+                gold = gold?.plus(coin.value * rates[coin.currency]!!)
+                val goldView: TextView = findViewById(R.id.gold_id)
+                goldView.text = "Your GOLD: " + gold.toString()
+                coinBank.remove(coin)
+            }
         }
 
         // removes last fragment from stack (which is BankFragment)
