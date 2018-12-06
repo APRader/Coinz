@@ -20,6 +20,16 @@
         android:layout_height="wrap_content"
         android:text="@string/send_coins" />
 
+    <FrameLayout
+        android:id="@+id/selection_placeholder"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="5dp"
+        android:background="@android:color/darker_gray"/>
+
     <Button
         android:id="@+id/logout_button_id"
         android:layout_width="match_parent"

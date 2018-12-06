@@ -230,6 +230,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
     private fun openTrading() {
         val tradingIntent = Intent(this, Trading::class.java)
+        tradingIntent.putExtra(COINWALLET, coinWallet)
         startActivity(tradingIntent)
     }
 

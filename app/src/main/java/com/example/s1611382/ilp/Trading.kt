@@ -2,6 +2,7 @@ package com.example.s1611382.ilp
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.PersistableBundle
@@ -9,6 +10,8 @@ import android.support.v7.app.ActionBar
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.util.Log
+import android.view.View
+import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import com.firebase.ui.auth.AuthUI
@@ -16,13 +19,19 @@ import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.*
+import com.google.gson.Gson
 import kotlinx.android.synthetic.main.trading.*
 
-class Trading : AppCompatActivity(){
+class Trading : AppCompatActivity(), SelectionFragment.OnCoinsSelected{
+    private val preferencesFile = "MyPrefsFile" // for storing preferences
     private val RC_SIGN_IN = 123
     private var firestore: FirebaseFirestore? = null
     private var users: CollectionReference? = null
     private var firestoreTrading: DocumentReference? = null
+    private lateinit var coinWallet: ArrayList<Coin>
+    private lateinit var tradeButton: Button
+    private val tradeSelection = "trade"
+    private var recipient = ""
 
     companion object {
         private const val TAG = "Coinz"
@@ -31,6 +40,7 @@ class Trading : AppCompatActivity(){
         private const val DOCUMENT_KEY = "Message"
         private const val NAME_FIELD = "Name"
         private const val COIN_FIELD = "Coin"
+        val COINLIST = "coinList"
     }
 
     override fun onCreate(savedInstanceState: Bundle?   ) {
@@ -50,6 +60,8 @@ class Trading : AppCompatActivity(){
         val actionbar: ActionBar? = supportActionBar
         actionbar?.setDisplayHomeAsUpEnabled(true)
 
+        coinWallet = intent.extras.getParcelableArrayList(MainActivity.COINWALLET)
+
         firestore = FirebaseFirestore.getInstance()
         // Use com.google.firebase.Timestamp objects instead of java.util.Date objects
         val settings = FirebaseFirestoreSettings.Builder()
@@ -58,7 +70,8 @@ class Trading : AppCompatActivity(){
         firestore?.firestoreSettings = settings
         //realtimeUpdateListener()
 
-        trade_button_id.setOnClickListener{_ -> getRecipient() }
+        tradeButton = findViewById(R.id.trade_button_id)
+        tradeButton.setOnClickListener{_ -> getRecipient() }
         logout_button_id.setOnClickListener{_ -> logout() }
     }
 
@@ -93,8 +106,8 @@ class Trading : AppCompatActivity(){
         builder.setPositiveButton(android.R.string.ok) { dialog, _ ->
             val userInput = editText.text
             if (!userInput.isBlank()) {
-                val recipient = userInput.toString()
-                sendCoins(recipient)
+                recipient = userInput.toString()
+                chooseCoins()
             }
             dialog.dismiss()
         }
@@ -106,22 +119,28 @@ class Trading : AppCompatActivity(){
         builder.show()
     }
 
-    private fun sendCoins(recipient: String) {
-        // user has to enter email of recipient
+    private fun sendCoins(recipient: String, sentCoins: ArrayList<Coin>) {
         if (recipient != "") {
-            val testCoin = Coin(id = "nolo", value = 69.toFloat(), currency = "DOLR")
             val user = FirebaseAuth.getInstance().currentUser
             val sender = user?.email
             // Each document in the User collection of firestore represents a user
             // In the user's trading collection, every document represents a coin the user got
             // Thus, we add coins to the trading collection of the recipient's document
             if (sender != null) {
-                firestore?.collection(COLLECTION_KEY)
-                        ?.document(recipient)
-                        ?.collection(TRADING_KEY)
-                        ?.add(testCoin)
-                        ?.addOnSuccessListener { print("Trade sent!") }
-                        ?.addOnFailureListener { e -> Log.e(TAG, e.message) }
+                for (coin in sentCoins) {
+                    // add coin to recipient's trading collection
+                    firestore?.collection(COLLECTION_KEY)
+                            ?.document(recipient)
+                            ?.collection(TRADING_KEY)
+                            ?.add(coin)
+                            ?.addOnSuccessListener { Log.d(TAG, "Sent coin $coin") }
+                            ?.addOnFailureListener { e -> Log.e(TAG, e.message) }
+
+                    // remove coin from sender's wallet
+                    coinWallet.remove(coin)
+                }
+
+
 
 
                 val yeet = firestore?.collection(COLLECTION_KEY)
@@ -144,6 +163,11 @@ class Trading : AppCompatActivity(){
              //       ?.addOnSuccessListener { print("Trade sent!") }
               //      ?.addOnFailureListener { e -> Log.e(TAG, e.message) }
         }
+        // removes last fragment from stack (which is WalletFragment)
+        val fragmentManager = supportFragmentManager
+        fragmentManager.popBackStack()
+        // add deposit button again, so user can deposit again
+        tradeButton.visibility = View.VISIBLE
     }
 
     /*
@@ -162,8 +186,44 @@ class Trading : AppCompatActivity(){
         }
     }*/
 
+    private fun chooseCoins() {
+        // hiding deposit button so user can't add more than one WalletFragment
+        tradeButton.visibility = View.GONE
+
+        //make fragment to show list of coins from which to choose from
+        val fragmentManager = supportFragmentManager
+        val fragmentTransaction = fragmentManager.beginTransaction()
+        val fragment = SelectionFragment()
+        val args = Bundle()
+        args.putParcelableArrayList(COINLIST, coinWallet)
+        args.putString(Bank.SELECTIONKEY, tradeSelection)
+        args.putString(Bank.TEXTKEY, "Send selected coins")
+        fragment.arguments = args
+        fragmentTransaction.replace(R.id.selection_placeholder, fragment)
+        // adding to stack so we can pop it when we finish depositing coins (or when user presses back button)
+        fragmentTransaction.addToBackStack("TradeFragment")
+        fragmentTransaction.commit()
+    }
+
+    override fun onCoinsSelected(selectedCoins: ArrayList<Coin>, selectionType: String) {
+        when (selectionType) {
+            tradeSelection -> sendCoins(recipient, selectedCoins)
+        }
+    }
+
     override fun onStart() {
         super.onStart()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // need to change values in wallet shared prefs before onStart of map is called, because it uses wallet
+        val settings = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE)
+        val editor = settings.edit()
+        val gson = Gson()
+        val json = gson.toJson(coinWallet)
+        editor.putString("lastCoinWallet", json)
+        editor.apply()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -181,5 +241,11 @@ class Trading : AppCompatActivity(){
                 finish()
             }
         }
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        // when user presses back button, fragment will be closed, so we need to set button that launched fragment to visible
+        tradeButton.visibility = View.VISIBLE
     }
 }
