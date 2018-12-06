@@ -13,4 +13,5 @@
     <string name="send_coins">Send coins</string>
     <string name="logout">Log out</string>
     <string name="email">Email address</string>
+    <string name="receive_coins">Receive coins</string>
 </resources>

@@ -30,6 +30,7 @@ class Trading : AppCompatActivity(), SelectionFragment.OnCoinsSelected{
     private var firestoreTrading: DocumentReference? = null
     private lateinit var coinWallet: ArrayList<Coin>
     private lateinit var tradeButton: Button
+    private lateinit var receiveButton: Button
     private val tradeSelection = "trade"
     private var recipient = ""
 
@@ -71,7 +72,9 @@ class Trading : AppCompatActivity(), SelectionFragment.OnCoinsSelected{
         //realtimeUpdateListener()
 
         tradeButton = findViewById(R.id.trade_button_id)
+        receiveButton = findViewById(R.id.receive_button_id)
         tradeButton.setOnClickListener{_ -> getRecipient() }
+        receiveButton.setOnClickListener{_ -> receiveCoins() }
         logout_button_id.setOnClickListener{_ -> logout() }
     }
 
@@ -107,7 +110,18 @@ class Trading : AppCompatActivity(), SelectionFragment.OnCoinsSelected{
             val userInput = editText.text
             if (!userInput.isBlank()) {
                 recipient = userInput.toString()
-                chooseCoins()
+                val user = FirebaseAuth.getInstance().currentUser
+                val email = user?.email.toString()
+                if (email != recipient) {
+                    chooseCoins()
+                } else {
+                    val builder = android.support.v7.app.AlertDialog.Builder(this)
+                    builder.setTitle("You can't trade coins with yourself")
+                    builder.setMessage("Try getting a friend")
+                    val dialog: android.support.v7.app.AlertDialog = builder.create()
+                    dialog.show()
+                }
+
             }
             dialog.dismiss()
         }
@@ -122,16 +136,16 @@ class Trading : AppCompatActivity(), SelectionFragment.OnCoinsSelected{
     private fun sendCoins(recipient: String, sentCoins: ArrayList<Coin>) {
         if (recipient != "") {
             val user = FirebaseAuth.getInstance().currentUser
-            val sender = user?.email
             // Each document in the User collection of firestore represents a user
             // In the user's trading collection, every document represents a coin the user got
             // Thus, we add coins to the trading collection of the recipient's document
-            if (sender != null) {
+            if (user != null ) {
+                val collection = firestore?.collection(COLLECTION_KEY)
+                        ?.document(recipient)
+                        ?.collection(TRADING_KEY)
                 for (coin in sentCoins) {
                     // add coin to recipient's trading collection
-                    firestore?.collection(COLLECTION_KEY)
-                            ?.document(recipient)
-                            ?.collection(TRADING_KEY)
+                    collection
                             ?.add(coin)
                             ?.addOnSuccessListener { Log.d(TAG, "Sent coin $coin") }
                             ?.addOnFailureListener { e -> Log.e(TAG, e.message) }
@@ -139,29 +153,7 @@ class Trading : AppCompatActivity(), SelectionFragment.OnCoinsSelected{
                     // remove coin from sender's wallet
                     coinWallet.remove(coin)
                 }
-
-
-
-
-                val yeet = firestore?.collection(COLLECTION_KEY)
-                        ?.document(recipient)
-                        ?.collection(TRADING_KEY)
-
-               yeet?.get()
-                       ?.addOnSuccessListener { documents ->
-                           for (document in documents) {
-                               print(document.data)
-                               val test = document.data
-                               print(test)
-                           }
-                       }
-                       ?.addOnFailureListener {exception ->
-                           print(exception)
-                       }
             }
-            //firestoreTrading?.set(newTrade)
-             //       ?.addOnSuccessListener { print("Trade sent!") }
-              //      ?.addOnFailureListener { e -> Log.e(TAG, e.message) }
         }
         // removes last fragment from stack (which is WalletFragment)
         val fragmentManager = supportFragmentManager
@@ -169,6 +161,41 @@ class Trading : AppCompatActivity(), SelectionFragment.OnCoinsSelected{
         // add deposit button again, so user can deposit again
         tradeButton.visibility = View.VISIBLE
     }
+
+    private fun receiveCoins() {
+        // if the trade fragment is open we need to close it and make its button visible
+        val fragmentManager = supportFragmentManager
+        fragmentManager.popBackStack()
+        tradeButton.visibility = View.VISIBLE
+
+        val user = FirebaseAuth.getInstance().currentUser
+        val email = user?.email.toString()
+
+        val collection = firestore?.collection(COLLECTION_KEY)
+                ?.document(email)
+                ?.collection(TRADING_KEY)
+
+        collection?.get()
+                ?.addOnSuccessListener { documents ->
+                    for (document in documents) {
+                        val data = document.data
+                        //TODO: catch if they are not right type
+                        val coin = Coin(id = data["id"].toString(),
+                                value = data["value"].toString().toFloat(),
+                                currency = data["currency"].toString())
+                        document.reference.delete()
+                                .addOnSuccessListener { print("success") }
+                                .addOnFailureListener{ print(":(")}
+                        coinWallet.add(coin)
+                    }
+                }
+                ?.addOnFailureListener {exception ->
+                    print(exception)
+                }
+    }
+    //firestoreTrading?.set(newTrade)
+    //       ?.addOnSuccessListener { print("Trade sent!") }
+    //      ?.addOnFailureListener { e -> Log.e(TAG, e.message) }
 
     /*
     private fun realtimeUpdateListener() {
