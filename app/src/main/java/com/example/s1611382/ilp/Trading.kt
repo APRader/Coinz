@@ -15,10 +15,7 @@ import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.firestore.CollectionReference
-import com.google.firebase .firestore.DocumentReference
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.FirebaseFirestoreSettings
+import com.google.firebase.firestore.*
 import kotlinx.android.synthetic.main.trading.*
 
 class Trading : AppCompatActivity(){
@@ -29,7 +26,8 @@ class Trading : AppCompatActivity(){
 
     companion object {
         private const val TAG = "Coinz"
-        private const val COLLECTION_KEY = "Trading"
+        private const val COLLECTION_KEY = "Users"
+        private const val TRADING_KEY = "Trading"
         private const val DOCUMENT_KEY = "Message"
         private const val NAME_FIELD = "Name"
         private const val COIN_FIELD = "Coin"
@@ -58,10 +56,9 @@ class Trading : AppCompatActivity(){
                 .setTimestampsInSnapshotsEnabled(true)
                 .build()
         firestore?.firestoreSettings = settings
-        users = firestore?.collection(COLLECTION_KEY)
         //realtimeUpdateListener()
 
-        trade_button_id.setOnClickListener{_ -> sendCoins() }
+        trade_button_id.setOnClickListener{_ -> getRecipient() }
         logout_button_id.setOnClickListener{_ -> logout() }
     }
 
@@ -85,22 +82,21 @@ class Trading : AppCompatActivity(){
                 }
     }
 
-    private fun sendCoins() {
-        // user has to enter email of recipient
+    private fun getRecipient() {
+        // opens dialogue for user to name recipient's email
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Who do you want to send it to?")
         val view = layoutInflater.inflate(R.layout.trade_dialog, null)
         val editText = view.findViewById(R.id.trade_edit_id) as EditText
         builder.setView(view)
 
-        builder.setPositiveButton(android.R.string.ok) {dialog, p1 ->
-            val recipient = editText.text
-            var isValid = true
-            if (recipient.isBlank()) {
-                dialog.dismiss()
-            } else {
-                //TODO: yeet
+        builder.setPositiveButton(android.R.string.ok) { dialog, _ ->
+            val userInput = editText.text
+            if (!userInput.isBlank()) {
+                val recipient = userInput.toString()
+                sendCoins(recipient)
             }
+            dialog.dismiss()
         }
 
         builder.setNegativeButton(android.R.string.cancel) {dialog, p1 ->
@@ -108,15 +104,46 @@ class Trading : AppCompatActivity(){
         }
 
         builder.show()
+    }
 
-        val user = FirebaseAuth.getInstance().currentUser
-        val newTrade = mapOf(
-                NAME_FIELD to "namefest",
-                COIN_FIELD to "coinfest")
-        users?.document("yeet")?.collection(user?.email!!)?.document("coins")?.set(newTrade)
-        firestoreTrading?.set(newTrade)
-                ?.addOnSuccessListener { print("Trade sent!") }
-                ?.addOnFailureListener { e -> Log.e(TAG, e.message)}
+    private fun sendCoins(recipient: String) {
+        // user has to enter email of recipient
+        if (recipient != "") {
+            val testCoin = Coin(id = "nolo", value = 69.toFloat(), currency = "DOLR")
+            val user = FirebaseAuth.getInstance().currentUser
+            val sender = user?.email
+            // Each document in the User collection of firestore represents a user
+            // In the user's trading collection, every document represents a coin the user got
+            // Thus, we add coins to the trading collection of the recipient's document
+            if (sender != null) {
+                firestore?.collection(COLLECTION_KEY)
+                        ?.document(recipient)
+                        ?.collection(TRADING_KEY)
+                        ?.add(testCoin)
+                        ?.addOnSuccessListener { print("Trade sent!") }
+                        ?.addOnFailureListener { e -> Log.e(TAG, e.message) }
+
+
+                val yeet = firestore?.collection(COLLECTION_KEY)
+                        ?.document(recipient)
+                        ?.collection(TRADING_KEY)
+
+               yeet?.get()
+                       ?.addOnSuccessListener { documents ->
+                           for (document in documents) {
+                               print(document.data)
+                               val test = document.data
+                               print(test)
+                           }
+                       }
+                       ?.addOnFailureListener {exception ->
+                           print(exception)
+                       }
+            }
+            //firestoreTrading?.set(newTrade)
+             //       ?.addOnSuccessListener { print("Trade sent!") }
+              //      ?.addOnFailureListener { e -> Log.e(TAG, e.message) }
+        }
     }
 
     /*

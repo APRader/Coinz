@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.support.design.widget.NavigationView
+import android.support.design.widget.TabLayout
 import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBar
@@ -24,20 +25,24 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
-class Bank: AppCompatActivity(), WalletFragment.OnCoinsDeposited, BankFragment.OnCoinsConverted {
+class Bank: AppCompatActivity(), SelectionFragment.OnCoinsSelected {
     private val preferencesFile = "MyPrefsFile" // for storing preferences
     private var gold: Double? = 0.0
     private lateinit var rates: HashMap<String, Float>
     private lateinit var coinWallet: ArrayList<Coin>
     private var coinBank : ArrayList<Coin> = arrayListOf()
+    // keys used to identify what action the selectionFragment should do
+    private val depositSelection = "deposit"
+    private val convertSelection = "convert"
 
     // counts how many deposits have been made today
     private var depositCounter: Int? = 0
     private var counterDate = ""
 
     companion object {
-        val COINWALLET = "coinWallet"
-        val COINBANK = "coinBank"
+        val COINLIST = "coinList"
+        val SELECTIONKEY = "selectionKey"
+        val TEXTKEY = "textKey"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -70,9 +75,11 @@ class Bank: AppCompatActivity(), WalletFragment.OnCoinsDeposited, BankFragment.O
             convertButton.visibility = View.VISIBLE
 
             val fragmentTransaction = fragmentManager.beginTransaction()
-            val fragment = WalletFragment()
+            val fragment = SelectionFragment()
             val args = Bundle()
-            args.putParcelableArrayList(COINWALLET, coinWallet)
+            args.putParcelableArrayList(COINLIST, coinWallet)
+            args.putString(SELECTIONKEY, depositSelection)
+            args.putString(TEXTKEY, "Deposit selected coins")
             fragment.arguments = args
             fragmentTransaction.replace(R.id.deposit_placeholder, fragment)
             // adding to stack so we can pop it when we finish depositing coins (or when user presses back button)
@@ -92,9 +99,11 @@ class Bank: AppCompatActivity(), WalletFragment.OnCoinsDeposited, BankFragment.O
             depositButton.visibility = View.VISIBLE
 
             val fragmentTransaction = fragmentManager.beginTransaction()
-            val fragment = BankFragment()
+            val fragment = SelectionFragment()
             val args = Bundle()
-            args.putParcelableArrayList(COINBANK, coinBank)
+            args.putParcelableArrayList(COINLIST, coinBank)
+            args.putString(SELECTIONKEY, convertSelection)
+            args.putString(TEXTKEY, "Convert selected coins")
             fragment.arguments = args
             fragmentTransaction.replace(R.id.convert_placeholder, fragment)
             // adding to stack so we can pop it when we finish depositing coins (or when user presses back button)
@@ -103,7 +112,7 @@ class Bank: AppCompatActivity(), WalletFragment.OnCoinsDeposited, BankFragment.O
         }
     }
 
-    override fun onCoinsDeposited(depositedCoins: ArrayList<Coin>) {
+    private fun depositCoins(depositedCoins: ArrayList<Coin>) {
         // TODO: Traded coins do not affect count
 
         val sdf = SimpleDateFormat("yyyy/MM/dd", Locale.UK)
@@ -144,7 +153,7 @@ class Bank: AppCompatActivity(), WalletFragment.OnCoinsDeposited, BankFragment.O
         depositButton.visibility = View.VISIBLE
     }
 
-    override fun onCoinsConverted(convertedCoins: ArrayList<Coin>) {
+    private fun convertCoins(convertedCoins: ArrayList<Coin>) {
         if (rates.isEmpty()) {
             // happens if app couldn't download rates
             val builder = AlertDialog.Builder(this)
@@ -169,6 +178,13 @@ class Bank: AppCompatActivity(), WalletFragment.OnCoinsDeposited, BankFragment.O
         // add convert button again, so user can deposit again
         val convertButton: Button = findViewById(R.id.convert_button_id)
         convertButton.visibility = View.VISIBLE
+    }
+
+    override fun onCoinsSelected(selectedCoins: ArrayList<Coin>, selectionType: String) {
+        when (selectionType) {
+            depositSelection -> depositCoins(selectedCoins)
+            convertSelection -> convertCoins(selectedCoins)
+        }
     }
 
     override fun onStart() {
