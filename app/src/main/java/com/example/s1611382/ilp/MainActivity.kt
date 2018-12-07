@@ -20,6 +20,7 @@ import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import com.example.s1611382.ilp.MainActivity.DownloadCompleteRunner.result
+import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -97,15 +98,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-/*
-        val user = FirebaseAuth.getInstance().currentUser
-        // check if user already logged in
-        if (user == null) {
-            // authentication using AuthUI
-            val loginIntent = Intent(this, Login::class.java)
-            startActivity(loginIntent)
-        }
-*/
+
         //need toolbar for app nav drawer button
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
@@ -138,6 +131,9 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
             }
             if (menuItem.itemId == R.id.nav_trading) {
                 openTrading()
+            }
+            if (menuItem.itemId == R.id.nav_logout) {
+                logout()
             }
             true
         }
@@ -357,6 +353,16 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         } else {
             Log.d(tag, "features is empty")
         }
+    }
+
+    private fun logout() {
+        AuthUI.getInstance()
+                .signOut(this)
+                .addOnCompleteListener {
+                    val loginIntent = Intent(this, Login::class.java)
+                    startActivity(loginIntent)
+                    finish()
+                }
     }
 
     interface DownloadCompleteListener {

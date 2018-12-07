@@ -14,6 +14,10 @@
             android:id="@+id/nav_trading"
             android:icon="@drawable/ic_group_black_24dp"
             android:title="@string/trading" />
+        <item
+            android:id="@+id/nav_logout"
+            android:icon="@drawable/ic_power_settings_new_black_24dp"
+            android:title="@string/logout" />
     </group>
 
 </menu>

@@ -13,13 +13,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.NoActionBar">
-        <activity android:name=".MainActivity">
+        <activity android:name=".Login">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".MainActivity"/>
         <activity
             android:name=".Wallet"
             android:label="@string/wallet"
@@ -32,7 +32,6 @@
             android:name=".Trading"
             android:label="@string/trading"
             android:parentActivityName=".MainActivity" />
-        <activity android:name=".Login"></activity>
     </application>
 
 </manifest>
