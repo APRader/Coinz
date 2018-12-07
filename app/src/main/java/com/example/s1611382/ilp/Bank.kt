@@ -113,8 +113,6 @@ class Bank: AppCompatActivity(), SelectionFragment.OnCoinsSelected {
     }
 
     private fun depositCoins(depositedCoins: ArrayList<Coin>) {
-        // TODO: Traded coins do not affect count
-
         val sdf = SimpleDateFormat("yyyy/MM/dd", Locale.UK)
         val today = sdf.format(Date())
         // if it's a new day, reset the deposit counter
@@ -122,9 +120,17 @@ class Bank: AppCompatActivity(), SelectionFragment.OnCoinsSelected {
             counterDate = today
             depositCounter = 0
         }
-        val numCoins = depositedCoins.size + depositCounter!!
+        // stores the amount of coins that were not traded, as these do not contribute to the max deposit rule
+        var untradedCoins = 0
+        for (coin in depositedCoins) {
+            // coin is not traded
+            if (coin.traded == 0) {
+                untradedCoins++
+            }
+        }
+        val numCoins = untradedCoins + depositCounter!!
         if (numCoins <= 25) {
-            depositCounter = depositCounter!! + depositedCoins.size
+            depositCounter = numCoins
             for (coin in depositedCoins) {
                 coinWallet.remove(coin)
                 coinBank.add(coin)
@@ -137,10 +143,11 @@ class Bank: AppCompatActivity(), SelectionFragment.OnCoinsSelected {
                 builder.setMessage("You have reached the limit of 25 coins deposited today. " +
                         "You can deposit coins again tomorrow.")
             } else {
-                builder.setMessage("You are trying to deposit ${depositedCoins.size} coins, " +
+                builder.setMessage("You are trying to deposit ${untradedCoins} coins that you collected yourself, " +
                         "but you have already deposited $depositCounter coins today. " +
                         "You can only deposit a maximum of 25 coins per day, " +
-                        "please select at most $coinsLeft to deposit.")
+                        "please select at most $coinsLeft to deposit, or receive coins from a trade, " +
+                        "as these do not count towards the deposit limit.")
             }
             val dialog: AlertDialog = builder.create()
             dialog.show()

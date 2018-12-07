@@ -171,6 +171,8 @@ class Trading : AppCompatActivity(), SelectionFragment.OnCoinsSelected{
         val user = FirebaseAuth.getInstance().currentUser
         val email = user?.email.toString()
 
+        var counter = 0
+
         val collection = firestore?.collection(COLLECTION_KEY)
                 ?.document(email)
                 ?.collection(TRADING_KEY)
@@ -180,14 +182,28 @@ class Trading : AppCompatActivity(), SelectionFragment.OnCoinsSelected{
                     for (document in documents) {
                         val data = document.data
                         //TODO: catch if they are not right type
+                        // traded value in coin is set to 1
                         val coin = Coin(id = data["id"].toString(),
                                 value = data["value"].toString().toFloat(),
-                                currency = data["currency"].toString())
+                                currency = data["currency"].toString(),
+                                traded = 1)
                         document.reference.delete()
                                 .addOnSuccessListener { print("success") }
                                 .addOnFailureListener{ print(":(")}
                         coinWallet.add(coin)
+                        counter++
                     }
+                    val builder = android.support.v7.app.AlertDialog.Builder(this)
+                    when (counter) {
+                        0 -> { builder.setTitle("No coins for you.")
+                            builder.setMessage("No one sent you coins since the last time you checked :(.")}
+                        1 -> { builder.setTitle("One coin for you.")
+                            builder.setMessage("You received one coin.")}
+                        else -> { builder.setTitle("You got coins!")
+                            builder.setMessage("You received $counter coins.")}
+                    }
+                    val dialog: android.support.v7.app.AlertDialog = builder.create()
+                    dialog.show()
                 }
                 ?.addOnFailureListener {exception ->
                     print(exception)

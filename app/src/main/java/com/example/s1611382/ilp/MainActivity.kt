@@ -267,7 +267,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
                 val coinId = f.properties()?.get("id").toString()
                         .removeSurrounding("\"")
                 val coin = Coin(id = coinId, value = coinValue.toFloat(), currency = coinCurrency)
-                // don't draw coin if it was already collected
+                // don't draw coin if it was already collected, except when it was traded
                 if (!collectedCoins.contains(coin.id)) {
                     // getting the Icon for the specific coin using BitmapFactory
                     val pin = "pin_$coinSymbol" + "_$coinColour"

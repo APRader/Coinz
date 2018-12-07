@@ -4,17 +4,18 @@ import android.os.Parcel
 import android.os.Parcelable
 
 // it's Parcelable so we can pass it to different activities
-data class Coin(val id: String, val value: Float, val currency: String) : Parcelable {
+data class Coin(val id: String, val value: Float, val currency: String, val traded: Int = 0) : Parcelable {
     constructor(parcel: Parcel) : this(
             parcel.readString(),
             parcel.readFloat(),
-            parcel.readString()) {
-    }
+            parcel.readString(),
+            parcel.readInt())
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(id)
         parcel.writeFloat(value)
         parcel.writeString(currency)
+        parcel.writeInt(traded)
     }
 
     override fun describeContents(): Int {
