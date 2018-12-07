@@ -12,22 +12,27 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        android:theme="@style/Theme.AppCompat.NoActionBar">
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            </activity>
+        </activity>
         <activity
             android:name=".Wallet"
+            android:label="@string/wallet"
             android:parentActivityName=".MainActivity" />
         <activity
             android:name=".Bank"
+            android:label="@string/bank"
             android:parentActivityName=".MainActivity" />
         <activity
             android:name=".Trading"
+            android:label="@string/trading"
             android:parentActivityName=".MainActivity" />
+        <activity android:name=".Login"></activity>
     </application>
 
-    </manifest>
+</manifest>

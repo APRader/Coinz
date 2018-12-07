@@ -22,6 +22,15 @@ data class Coin(val id: String, val value: Float, val currency: String, val trad
         return 0
     }
 
+    override fun toString(): String {
+        val intValue = value.toInt()
+        var isTraded = ""
+        if (traded == 1) {
+            isTraded = ", traded"
+        }
+        return " $intValue $currency$isTraded"
+    }
+
     companion object CREATOR : Parcelable.Creator<Coin> {
         override fun createFromParcel(parcel: Parcel): Coin {
             return Coin(parcel)

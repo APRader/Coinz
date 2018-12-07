@@ -25,25 +25,26 @@
             mapbox:mapbox_cameraTargetLat="55.944"
             mapbox:mapbox_cameraTargetLng="-3.188"
             mapbox:mapbox_cameraZoom="14"
-            mapbox:mapbox_styleUrl="mapbox://styles/mapbox/streets-v10" />
+            mapbox:mapbox_styleUrl="mapbox://styles/mapbox/dark-v9" />
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end|bottom"
+            android:layout_margin="16dp"
             android:layout_marginBottom="8dp"
             android:layout_marginEnd="8dp"
             android:src="@drawable/ic_my_location_black_24dp"
-            android:layout_margin="16dp"
+            mapbox:backgroundTint="@color/colorPrimary"
             mapbox:layout_constraintBottom_toBottomOf="parent"
-            mapbox:layout_constraintEnd_toEndOf="parent"/>
+            mapbox:layout_constraintEnd_toEndOf="parent" />
 
         <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
+            android:layout_height="?android:attr/actionBarSize"
+            android:background="@color/colorPrimary"
             android:theme="@style/ThemeOverlay.AppCompat.ActionBar" />
 
     </android.support.constraint.ConstraintLayout>

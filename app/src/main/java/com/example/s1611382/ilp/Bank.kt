@@ -58,7 +58,16 @@ class Bank: AppCompatActivity(), SelectionFragment.OnCoinsSelected {
         coinWallet = intent.extras.getParcelableArrayList(MainActivity.COINWALLET)
 
         val ratesView: TextView = findViewById(R.id.rates_id)
-        ratesView.text = rates.toString()
+        var ratesText = "No rates available"
+        if (rates.isNotEmpty()) {
+            val shil = rates["SHIL"]
+            val dolr = rates["DOLR"]
+            val quid = rates["QUID"]
+            val peny = rates["PENY"]
+            ratesText = "SHIL: $shil\nDOLR: $dolr\nQUID: $quid\nPENY: $peny"
+        }
+
+        ratesView.text = ratesText
 
         val depositButton: Button = findViewById(R.id.deposit_button_id)
         val convertButton: Button = findViewById(R.id.convert_button_id)
@@ -174,7 +183,7 @@ class Bank: AppCompatActivity(), SelectionFragment.OnCoinsSelected {
             for (coin in convertedCoins) {
                 gold = gold?.plus(coin.value * rates[coin.currency]!!)
                 val goldView: TextView = findViewById(R.id.gold_id)
-                goldView.text = "Your GOLD: " + gold.toString()
+                goldView.text = "Your GOLD: ${gold?.toInt()}"
                 coinBank.remove(coin)
             }
         }
@@ -202,7 +211,7 @@ class Bank: AppCompatActivity(), SelectionFragment.OnCoinsSelected {
             gold = 0.0
         }
         val goldView: TextView = findViewById(R.id.gold_id)
-        goldView.text = "Your GOLD: " + gold.toString()
+        goldView.text = "Your GOLD: ${gold?.toInt()}"
 
         depositCounter = settings.getString("lastDepositCounter", "0").toIntOrNull()
         if (depositCounter == null) {

@@ -20,6 +20,7 @@ import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import com.example.s1611382.ilp.MainActivity.DownloadCompleteRunner.result
+import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.mapbox.android.core.location.LocationEngine
@@ -96,7 +97,15 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
+/*
+        val user = FirebaseAuth.getInstance().currentUser
+        // check if user already logged in
+        if (user == null) {
+            // authentication using AuthUI
+            val loginIntent = Intent(this, Login::class.java)
+            startActivity(loginIntent)
+        }
+*/
         //need toolbar for app nav drawer button
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
@@ -335,7 +344,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
                         collectedCoins.add(coin.id)
                         val builder = AlertDialog.Builder(this@MainActivity)
                         builder.setTitle("Coin collected")
-                        builder.setMessage("You collected coin $coinId!")
+                        builder.setMessage("You collected $coin!")
                         val dialog: AlertDialog = builder.create()
                         dialog.show()
                         // coin is deleted from map and markerPairs

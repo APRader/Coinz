@@ -21,6 +21,14 @@ class WalletAdapter(private val myDataset: ArrayList<Coin>) :
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         holder.textView.text = myDataset[position].toString()
+        var drawable = R.drawable.ic_copyright_black_24dp
+        when (myDataset[position].currency) {
+            "SHIL" -> drawable = R.drawable.coin_blue
+            "DOLR" -> drawable = R.drawable.coin_green
+            "QUID" -> drawable = R.drawable.coin_yellow
+            "PENY" -> drawable = R.drawable.coin_red
+        }
+        holder.textView.setCompoundDrawablesWithIntrinsicBounds(drawable, 0, 0, 0)
     }
 
     override fun getItemCount() = myDataset.size
