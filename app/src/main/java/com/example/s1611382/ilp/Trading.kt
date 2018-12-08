@@ -1,11 +1,8 @@
 package com.example.s1611382.ilp
 
-import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.support.v7.app.ActionBar
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
@@ -13,14 +10,9 @@ import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
-import android.widget.Toast
-import com.firebase.ui.auth.AuthUI
-import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.*
 import com.google.gson.Gson
-import kotlinx.android.synthetic.main.trading.*
 
 class Trading : AppCompatActivity(), SelectionFragment.OnCoinsSelected{
     private val preferencesFile = "MyPrefsFile" // for storing preferences
@@ -47,13 +39,6 @@ class Trading : AppCompatActivity(), SelectionFragment.OnCoinsSelected{
     override fun onCreate(savedInstanceState: Bundle?   ) {
         super.onCreate(savedInstanceState)
 
-        val user = FirebaseAuth.getInstance().currentUser
-        // check if user already logged in
-        if (user == null) {
-            // authentication using AuthUI
-            login()
-        }
-
         setContentView(R.layout.trading)
 
         val toolbar: Toolbar = findViewById(R.id.toolbar)
@@ -61,7 +46,7 @@ class Trading : AppCompatActivity(), SelectionFragment.OnCoinsSelected{
         val actionbar: ActionBar? = supportActionBar
         actionbar?.setDisplayHomeAsUpEnabled(true)
 
-        coinWallet = intent.extras.getParcelableArrayList(MainActivity.COINWALLET)
+        coinWallet = intent.extras.getParcelableArrayList(Map.COINWALLET)
 
         firestore = FirebaseFirestore.getInstance()
         // Use com.google.firebase.Timestamp objects instead of java.util.Date objects
@@ -75,27 +60,6 @@ class Trading : AppCompatActivity(), SelectionFragment.OnCoinsSelected{
         receiveButton = findViewById(R.id.receive_button_id)
         tradeButton.setOnClickListener{_ -> getRecipient() }
         receiveButton.setOnClickListener{_ -> receiveCoins() }
-        logout_button_id.setOnClickListener{_ -> logout() }
-    }
-
-    private fun login() {
-        val providers = arrayListOf(AuthUI.IdpConfig.EmailBuilder().build())
-        startActivityForResult(
-                AuthUI
-                        .getInstance()
-                        .createSignInIntentBuilder()
-                        .setAvailableProviders(providers)
-                        .build(),
-                RC_SIGN_IN
-        )
-    }
-
-    private fun logout() {
-        AuthUI.getInstance()
-                .signOut(this)
-                .addOnCompleteListener {
-                    finish()
-                }
     }
 
     private fun getRecipient() {
@@ -196,7 +160,7 @@ class Trading : AppCompatActivity(), SelectionFragment.OnCoinsSelected{
                     val builder = android.support.v7.app.AlertDialog.Builder(this)
                     when (counter) {
                         0 -> { builder.setTitle("No coins for you.")
-                            builder.setMessage("No one sent you coins since the last time you checked :(.")}
+                            builder.setMessage("No one has sent you coins since the last time you checked :(.")}
                         1 -> { builder.setTitle("One coin for you.")
                             builder.setMessage("You received one coin.")}
                         else -> { builder.setTitle("You got coins!")
@@ -267,23 +231,6 @@ class Trading : AppCompatActivity(), SelectionFragment.OnCoinsSelected{
         val json = gson.toJson(coinWallet)
         editor.putString("lastCoinWallet", json)
         editor.apply()
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (requestCode == RC_SIGN_IN) {
-            val response = IdpResponse.fromResultIntent(data)
-
-            if (resultCode == Activity.RESULT_OK) {
-                //val user = FirebaseAuth.getInstance().currentUser
-                //print(user)
-            } else {
-                // user did not login, so we go back to map
-                Toast.makeText(this, "Login failed.", Toast.LENGTH_SHORT).show()
-                finish()
-            }
-        }
     }
 
     override fun onBackPressed() {

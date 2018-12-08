@@ -11,7 +11,7 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".MainActivity"
+        tools:context=".Map"
         tools:layout_editor_absoluteY="25dp">
 
         <com.mapbox.mapboxsdk.maps.MapView
@@ -35,7 +35,7 @@
             android:layout_margin="16dp"
             android:layout_marginBottom="8dp"
             android:layout_marginEnd="8dp"
-            android:src="@drawable/ic_my_location_black_24dp"
+            android:src="@drawable/ic_my_location"
             mapbox:backgroundTint="@color/colorPrimary"
             mapbox:layout_constraintBottom_toBottomOf="parent"
             mapbox:layout_constraintEnd_toEndOf="parent" />

@@ -1,8 +1,6 @@
 package com.example.s1611382.ilp
 
 import android.annotation.SuppressLint
-import android.app.PendingIntent
-import android.app.TaskStackBuilder
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
@@ -19,11 +17,12 @@ import android.support.v7.widget.Toolbar
 import android.util.Log
 import android.view.MenuItem
 import android.view.View
-import com.example.s1611382.ilp.MainActivity.DownloadCompleteRunner.result
+import com.example.s1611382.ilp.Map.DownloadCompleteRunner.result
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineListener
 import com.mapbox.android.core.location.LocationEnginePriority
@@ -46,6 +45,7 @@ import com.mapbox.mapboxsdk.annotations.Marker
 import com.mapbox.mapboxsdk.annotations.MarkerOptions
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback
 import kotlinx.android.synthetic.main.wallet.*
+import org.jetbrains.anko.doAsync
 import org.json.JSONObject
 import java.io.IOException
 import java.io.InputStream
@@ -57,9 +57,9 @@ import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
 
-class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineListener, OnMapReadyCallback {
+class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, OnMapReadyCallback {
 
-    private val tag = "MainActivity"
+    private val tag = "Map"
     private var mapView: MapView? = null
     private var map: MapboxMap? = null
     private var downloadDate = "" // Format: YYYY/MM/DD
@@ -90,7 +90,13 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     //for UI: icon representing user location
     private lateinit var locationLayerPlugin: LocationLayerPlugin
 
+    private var firestore: FirebaseFirestore? = null
+    private val COLLECTION_KEY = "Users"
+    private val WALLET_KEY = "Wallet"
+    private val BANK_KEY = "Bank"
+
     companion object {
+        private const val TAG = "Map"
         val COINWALLET = "coinWallet"
         val RATES = "rates"
     }
@@ -160,8 +166,40 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
             // Make location information available
             enableLocation()
 
-            // Get the GeoJSON marker coordinates from the web
-            downloadMap()
+            firestore = FirebaseFirestore.getInstance()
+            // Use com.google.firebase.Timestamp objects instead of java.util.Date objects
+            val firebaseSettings = FirebaseFirestoreSettings.Builder()
+                    .setTimestampsInSnapshotsEnabled(true)
+                    .build()
+            firestore?.firestoreSettings = firebaseSettings
+
+            val user = FirebaseAuth.getInstance().currentUser
+            val email = user?.email.toString()
+
+            val walletCollection = firestore?.collection(COLLECTION_KEY)
+                    ?.document(email)
+                    ?.collection(WALLET_KEY)
+
+            walletCollection?.get()
+                    ?.addOnSuccessListener { documents ->
+                        for (document in documents) {
+                            val data = document.data
+                            //TODO: catch if they are not right type
+                            // traded value in coin is set to 1
+                            val coin = Coin(id = data["id"].toString(),
+                                    value = data["value"].toString().toFloat(),
+                                    currency = data["currency"].toString())
+                            coinWallet.add(coin)
+                            if (coin.traded == 0) {
+                                collectedCoins.add(coin.id)
+                            }
+                        }
+                        // Get the GeoJSON marker coordinates from the web
+                        downloadMap()
+                    }
+                    ?.addOnFailureListener { exception ->
+                        print(exception)
+                    }
         }
     }
 
@@ -311,7 +349,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
             //only update download date if download was successful and coins are drawn
             downloadDate = today
         } else {
-            val builder = AlertDialog.Builder(this@MainActivity)
+            val builder = AlertDialog.Builder(this@Map)
             builder.setTitle("No network connection")
             builder.setMessage("Unable to load content. " +
                     "Check your network connection and relaunch your app to try again")
@@ -338,7 +376,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
                         val coinId = coin.id
                         coinWallet.add(coin)
                         collectedCoins.add(coin.id)
-                        val builder = AlertDialog.Builder(this@MainActivity)
+                        val builder = AlertDialog.Builder(this@Map)
                         builder.setTitle("Coin collected")
                         builder.setMessage("You collected $coin!")
                         val dialog: AlertDialog = builder.create()
@@ -437,7 +475,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         if (granted) {
             enableLocation()
         } else {
-            val builder = AlertDialog.Builder(this@MainActivity)
+            val builder = AlertDialog.Builder(this@Map)
             builder.setTitle("Location permission not granted")
             builder.setMessage("You denied permission to use location. " +
                     "Without that information you cannot collect new coins. " +
@@ -478,26 +516,18 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
             locationLayerPlugin.onStart()
             locationEngine.requestLocationUpdates()
         }
+
         // Restore preferences
-        val settings = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE)
+        val prefSettings = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE)
 
         // use "" as the default value (this might be the first time the app is run)
-        downloadDate = settings.getString("lastDownloadDate", "")
-        lastJson = settings.getString("lastJson", "")
-
-        // converting json string from sharedPrefs into coin list again
-        val gson= Gson()
-        var json = settings.getString("lastCoinWallet", "[]")
-        var type = object : TypeToken<ArrayList<Coin>>() {}.type
-        coinWallet = gson.fromJson<ArrayList<Coin>>(json, type)
-
-        json = settings.getString("collectedCoins", "[]")
-        type = object : TypeToken<ArrayList<String>>() {}.type
-        collectedCoins = gson.fromJson(json, type)
+        downloadDate = prefSettings.getString("lastDownloadDate", "")
+        lastJson = prefSettings.getString("lastJson", "")
 
         Log.d(tag, "[onStart] Recalled lastDownloadDate is '$downloadDate'")
         Log.d(tag, "[onStart] Recalled lastJson is '$lastJson'")
     }
+
     override fun onResume() {
         super.onResume()
         mapView?.onResume()
@@ -516,11 +546,47 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         Log.d(tag, "[onStop] Storing lastDownloadDate of $downloadDate")
         Log.d(tag, "[onStop] Storing lastJson of $lastJson")
 
+
+        firestore = FirebaseFirestore.getInstance()
+        // Use com.google.firebase.Timestamp objects instead of java.util.Date objects
+        val firebaseSettings = FirebaseFirestoreSettings.Builder()
+                .setTimestampsInSnapshotsEnabled(true)
+                .build()
+        firestore?.firestoreSettings = firebaseSettings
+
+        val user = FirebaseAuth.getInstance().currentUser
+        val email = user?.email.toString()
+
+        val walletCollection = firestore?.collection(COLLECTION_KEY)
+                ?.document(email)
+                ?.collection(WALLET_KEY)
+
+        // delete all coins in firebase,
+        walletCollection?.get()
+                ?.addOnSuccessListener { documents ->
+                    for (document in documents) {
+                        document.reference.delete()
+                                .addOnSuccessListener { print("success") }
+                                .addOnFailureListener{ print(":(")}
+                        }
+                    // add current coins into firebase
+                    for (coin in coinWallet) {
+                        walletCollection
+                                ?.add(coin)
+                                ?.addOnSuccessListener { Log.d(TAG, "Sent coin $coin") }
+                                ?.addOnFailureListener { e -> Log.e(TAG, e.message) }
+                    }
+                    }
+                ?.addOnFailureListener {exception ->
+                    print(exception)
+                }
+
+
         // All objects are from android.context.Context
-        val settings = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE)
+        val prefSettings = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE)
 
         // We need an Editor object o make preference changes
-        val editor = settings.edit()
+        val editor = prefSettings.edit()
         editor.putString("lastDownloadDate", downloadDate)
         editor.putString("lastJson", lastJson)
 
@@ -532,6 +598,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         // Apply the edits!
         editor.apply()
     }
+
     override fun onDestroy() {
         super.onDestroy()
         mapView?.onDestroy()

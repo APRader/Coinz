@@ -1,25 +1,16 @@
 package com.example.s1611382.ilp
 
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
-import android.support.design.widget.NavigationView
-import android.support.design.widget.TabLayout
-import android.support.v4.view.GravityCompat
-import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBar
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
-import android.view.MenuItem
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
-import android.widget.Toast
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import kotlinx.android.synthetic.main.coin_text_view.view.*
-import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -54,8 +45,8 @@ class Bank: AppCompatActivity(), SelectionFragment.OnCoinsSelected {
         val actionbar: ActionBar? = supportActionBar
         actionbar?.setDisplayHomeAsUpEnabled(true)
 
-        rates = intent.extras.getSerializable(MainActivity.RATES) as HashMap<String, Float>
-        coinWallet = intent.extras.getParcelableArrayList(MainActivity.COINWALLET)
+        rates = intent.extras.getSerializable(Map.RATES) as HashMap<String, Float>
+        coinWallet = intent.extras.getParcelableArrayList(Map.COINWALLET)
 
         val ratesView: TextView = findViewById(R.id.rates_id)
         var ratesText = "No rates available"

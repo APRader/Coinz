@@ -6,11 +6,9 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
 import android.widget.Toast
-import com.example.s1611382.ilp.R.id.login_button_id
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.android.synthetic.main.trading.*
 
 class Login : AppCompatActivity() {
     private val RC_SIGN_IN = 123
@@ -22,7 +20,7 @@ class Login : AppCompatActivity() {
         // check if user already logged in
         if (user != null) {
             // user is already logged in
-            val mapIntent = Intent(this, MainActivity::class.java)
+            val mapIntent = Intent(this, Map::class.java)
             startActivity(mapIntent)
             finish()
         }
@@ -52,7 +50,7 @@ class Login : AppCompatActivity() {
             val response = IdpResponse.fromResultIntent(data)
 
             if (resultCode == Activity.RESULT_OK) {
-                val mapIntent = Intent(this, MainActivity::class.java)
+                val mapIntent = Intent(this, Map::class.java)
                 startActivity(mapIntent)
                 finish()
             } else {
