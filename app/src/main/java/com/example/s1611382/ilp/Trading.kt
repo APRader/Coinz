@@ -30,6 +30,7 @@ class Trading : AppCompatActivity(), SelectionFragment.OnCoinsSelected{
         private const val TAG = "Coinz"
         private const val COLLECTION_KEY = "Users"
         private const val TRADING_KEY = "Trading"
+        private const val WALLET_KEY = "Wallet"
         private const val DOCUMENT_KEY = "Message"
         private const val NAME_FIELD = "Name"
         private const val COIN_FIELD = "Coin"
@@ -224,13 +225,39 @@ class Trading : AppCompatActivity(), SelectionFragment.OnCoinsSelected{
 
     override fun onPause() {
         super.onPause()
-        // need to change values in wallet shared prefs before onStart of map is called, because it uses wallet
-        val settings = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE)
-        val editor = settings.edit()
-        val gson = Gson()
-        val json = gson.toJson(coinWallet)
-        editor.putString("lastCoinWallet", json)
-        editor.apply()
+        firestore = FirebaseFirestore.getInstance()
+        // Use com.google.firebase.Timestamp objects instead of java.util.Date objects
+        val firebaseSettings = FirebaseFirestoreSettings.Builder()
+                .setTimestampsInSnapshotsEnabled(true)
+                .build()
+        firestore?.firestoreSettings = firebaseSettings
+
+        val user = FirebaseAuth.getInstance().currentUser
+        val email = user?.email.toString()
+
+        val walletCollection = firestore?.collection(COLLECTION_KEY)
+                ?.document(email)
+                ?.collection(WALLET_KEY)
+
+        // delete all coins in firebase,
+        walletCollection?.get()
+                ?.addOnSuccessListener { documents ->
+                    for (document in documents) {
+                        document.reference.delete()
+                                .addOnSuccessListener { print("success") }
+                                .addOnFailureListener{ print(":(")}
+                    }
+                    // add current coins into firebase
+                    for (coin in coinWallet) {
+                        walletCollection
+                                ?.add(coin)
+                                ?.addOnSuccessListener { Log.d(TAG, "Sent coin $coin") }
+                                ?.addOnFailureListener { e -> Log.e(TAG, e.message) }
+                    }
+                }
+                ?.addOnFailureListener {exception ->
+                    print(exception)
+                }
     }
 
     override fun onBackPressed() {

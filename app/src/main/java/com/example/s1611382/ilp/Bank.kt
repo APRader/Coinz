@@ -6,9 +6,13 @@ import android.support.v7.app.ActionBar
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.text.SimpleDateFormat
@@ -29,6 +33,12 @@ class Bank: AppCompatActivity(), SelectionFragment.OnCoinsSelected {
     // counts how many deposits have been made today
     private var depositCounter: Int? = 0
     private var counterDate = ""
+
+    private var firestore: FirebaseFirestore? = null
+    private val COLLECTION_KEY = "Users"
+    private val WALLET_KEY = "Wallet"
+    private val BANK_KEY = "Bank"
+    private val TAG = "Bank"
 
     companion object {
         val COINLIST = "coinList"
@@ -197,47 +207,141 @@ class Bank: AppCompatActivity(), SelectionFragment.OnCoinsSelected {
     override fun onStart() {
         super.onStart()
         val settings = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE)
-        gold = settings.getString("lastGold", "").toDoubleOrNull()
-        if (gold == null) {
-            gold = 0.0
-        }
-        val goldView: TextView = findViewById(R.id.gold_id)
-        goldView.text = "Your GOLD: ${gold?.toInt()}"
 
-        depositCounter = settings.getString("lastDepositCounter", "0").toIntOrNull()
-        if (depositCounter == null) {
-            depositCounter = 0
-        }
+        firestore = FirebaseFirestore.getInstance()
+        // Use com.google.firebase.Timestamp objects instead of java.util.Date objects
+        val firebaseSettings = FirebaseFirestoreSettings.Builder()
+                .setTimestampsInSnapshotsEnabled(true)
+                .build()
+        firestore?.firestoreSettings = firebaseSettings
+
+        val user = FirebaseAuth.getInstance().currentUser
+        val email = user?.email.toString()
+
+        firestore?.collection(COLLECTION_KEY)
+                ?.document(email)
+                ?.get()
+                ?.addOnSuccessListener { document ->
+                    gold = document.data?.get("gold") as Double?
+                    depositCounter = document.data?.get("counter").toString().toInt()
+                    if (gold == null) {
+                        gold = 0.0
+                    }
+                    val goldView: TextView = findViewById(R.id.gold_id)
+                    goldView.text = "Your GOLD: ${gold?.toInt()}"
+                    if (depositCounter == null) {
+                        depositCounter = 0
+                    }
+                }
+
         counterDate = settings.getString("lastCounterDate", "")
 
-        val gson= Gson()
-        val json = settings.getString("lastCoinBank", "[]")
-        val type = object : TypeToken<ArrayList<Coin>>() {}.type
-        coinBank = gson.fromJson<ArrayList<Coin>>(json, type)
+        val bankCollection = firestore?.collection(COLLECTION_KEY)
+                ?.document(email)
+                ?.collection(BANK_KEY)
+
+        bankCollection?.get()
+                ?.addOnSuccessListener { documents ->
+                    for (document in documents) {
+                        val data = document.data
+                        //TODO: catch if they are not right type
+                        // traded value in coin is set to 1
+                        val coin = Coin(id = data["id"].toString(),
+                                value = data["value"].toString().toFloat(),
+                                currency = data["currency"].toString())
+                        coinBank.add(coin)
+                    }
+                }
+                ?.addOnFailureListener { exception ->
+                    print(exception)
+                }
     }
 
     override fun onStop() {
-         super.onStop()
+        super.onStop()
+
+        firestore = FirebaseFirestore.getInstance()
+        // Use com.google.firebase.Timestamp objects instead of java.util.Date objects
+        val firebaseSettings = FirebaseFirestoreSettings.Builder()
+                .setTimestampsInSnapshotsEnabled(true)
+                .build()
+        firestore?.firestoreSettings = firebaseSettings
+
+        val user = FirebaseAuth.getInstance().currentUser
+        val email = user?.email.toString()
+
+        val bankCollection = firestore?.collection(COLLECTION_KEY)
+                ?.document(email)
+                ?.collection(BANK_KEY)
+
+        // delete all coins in firebase,
+        bankCollection?.get()
+                ?.addOnSuccessListener { documents ->
+                    for (document in documents) {
+                        document.reference.delete()
+                                .addOnSuccessListener { print("success") }
+                                .addOnFailureListener{ print(":(")}
+                    }
+                    // add current coins into firebase
+                    for (coin in coinBank) {
+                        bankCollection
+                                ?.add(coin)
+                                ?.addOnSuccessListener { Log.d(TAG, "Sent coin $coin") }
+                                ?.addOnFailureListener { e -> Log.e(TAG, e.message) }
+                    }
+                }
+                ?.addOnFailureListener {exception ->
+                    print(exception)
+                }
+        val info = HashMap<String, Any>()
+        info["gold"] = gold!!
+        info["counter"] = depositCounter!!
+        firestore?.collection(COLLECTION_KEY)
+                ?.document(email)
+                ?.set(info)
+
         val settings = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE)
         val editor = settings.edit()
-        editor.putString("lastGold", gold.toString())
-        editor.putString("lastDepositCounter", depositCounter.toString())
         editor.putString("lastCounterDate", counterDate)
-        val gson = Gson()
-        val json = gson.toJson(coinBank)
-        editor.putString("lastCoinBank", json)
         editor.apply()
     }
 
     override fun onPause() {
         super.onPause()
         // need to change values in wallet shared prefs before onStart of map is called, because it uses wallet
-        val settings = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE)
-        val editor = settings.edit()
-        val gson = Gson()
-        val json = gson.toJson(coinWallet)
-        editor.putString("lastCoinWallet", json)
-        editor.apply()
+        firestore = FirebaseFirestore.getInstance()
+        // Use com.google.firebase.Timestamp objects instead of java.util.Date objects
+        val firebaseSettings = FirebaseFirestoreSettings.Builder()
+                .setTimestampsInSnapshotsEnabled(true)
+                .build()
+        firestore?.firestoreSettings = firebaseSettings
+
+        val user = FirebaseAuth.getInstance().currentUser
+        val email = user?.email.toString()
+
+        val walletCollection = firestore?.collection(COLLECTION_KEY)
+                ?.document(email)
+                ?.collection(WALLET_KEY)
+
+        // delete all coins in firebase,
+        walletCollection?.get()
+                ?.addOnSuccessListener { documents ->
+                    for (document in documents) {
+                        document.reference.delete()
+                                .addOnSuccessListener { print("success") }
+                                .addOnFailureListener{ print(":(")}
+                    }
+                    // add current coins into firebase
+                    for (coin in coinWallet) {
+                        walletCollection
+                                ?.add(coin)
+                                ?.addOnSuccessListener { Log.d(TAG, "Sent coin $coin") }
+                                ?.addOnFailureListener { e -> Log.e(TAG, e.message) }
+                    }
+                }
+                ?.addOnFailureListener {exception ->
+                    print(exception)
+                }
     }
 
     override fun onBackPressed() {

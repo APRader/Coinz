@@ -93,7 +93,6 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
     private var firestore: FirebaseFirestore? = null
     private val COLLECTION_KEY = "Users"
     private val WALLET_KEY = "Wallet"
-    private val BANK_KEY = "Bank"
 
     companion object {
         private const val TAG = "Map"
