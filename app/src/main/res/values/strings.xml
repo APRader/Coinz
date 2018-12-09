@@ -2,23 +2,45 @@
     <string name="app_name">Coinz</string>
     //access token for Mapbox
     <string name="access_token">pk.eyJ1IjoiYXByYWRlciIsImEiOiJjam1odmQ1a2QxcDluM3BvOWJkZ3BhM3NjIn0.DygeFTcbsvcL4sZq-tofDQ</string>
+    <string name="json_site">http://homepages.inf.ed.ac.uk/stg/coinz/$today/coinzmap.geojson</string>
+
     <string name="wallet">Wallet</string>
     <string name="bank">Bank</string>
     <string name="map">Main map</string>
-    <string name="deposit">Make deposit</string>
-    <string name="coin_deposit">Deposit selected coins</string>
-    <string name="convert">Convert coins in bank to GOLD</string>
-    <string name="coin_convert">Convert selected coins</string>
     <string name="trading">Trading</string>
-    <string name="send_coins">Send coins</string>
     <string name="logout">Log out</string>
     <string name="email">Email address</string>
-    <string name="receive_coins">Receive coins</string>
-    <string name="rates">Today\'s rates: 1 GOLD =</string>
 
 
-    <!-- Login strings -->
+    <!-- Login -->
     <string name="login_start_text">Welcome to Coinz! In order to play, please log in or register a new account.</string>
     <string name="login_button">Log in/register</string>
     <string name="login_failed_message">Log in failed</string>
+
+    <!-- Network connection -->
+    <string name="no_connection_title">No network connection</string>
+    <string name="no_connection_message">Unable to load content. Check your network connection and relaunch your app to try again</string>
+
+    <!-- Coins -->
+    <string name="send_coins">Send coins</string>
+    <string name="receive_coins">Receive coins</string>
+    <string name="coin_collected">Coin collected!</string>
+    <string name="you_collected">You collected</string>
+    <string name="deposit">Make deposit</string>
+    <string name="coin_deposit">Deposit selected coins</string>
+    <string name="convert">Convert coins in bank to GOLD</string>
+    <string name="coin_conversion">Convert selected coins</string>
+    <string name="rates">Today\'s rates: 1 GOLD =</string>
+    <string name="rates_unavailable_title">Exchange rates unavailable</string>
+    <string name="rates_unavailable_message">Coins cannot be converted. Please go to the map with a working internet connection, so rates can be downloaded.</string>
+    <string name="deposit_limit_title">Deposit limit reached</string>
+    <string name="deposit_limit_message_0">You have reached the limit of 25 coins deposited today. You can deposit coins again tomorrow.</string>
+    <string name="deposit_limit_message_many">You are trying to deposit %1$d coins that you collected yourself, but you have already deposited %2$d coins today.
+        The limit is 25 collected coins per day, so please select at most %3$d to deposit.</string>
+    <string name="gold">Your GOLD: %1$d</string>
+
+    <!-- Permissions -->
+    <string name="no_location_permission_title">Location permission not granted</string>
+    <string name="no_location_permission_message">You denied permission to use location. Without that information you cannot collect new coins. Please accept access to location when you reopen the app so you can enjoy Coinz to the fullest extent!</string>
+
 </resources>

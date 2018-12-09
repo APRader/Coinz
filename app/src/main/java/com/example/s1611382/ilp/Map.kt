@@ -315,11 +315,10 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
         // update download date as a string
         val sdf = SimpleDateFormat("yyyy/MM/dd", Locale.UK)
         val today = sdf.format(Date())
-
         //get map data if download date is old
         if (today != downloadDate) {
             val task = DownloadFileTask(DownloadCompleteRunner)
-            lastJson = task.execute("http://homepages.inf.ed.ac.uk/stg/coinz/$today/coinzmap.geojson").get()
+            lastJson = task.execute(getString(R.string.json_site)).get()
         }
 
         // check if Json contains valid coin data (i.e. download was successful)
@@ -329,9 +328,8 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
             downloadDate = today
         } else {
             val builder = AlertDialog.Builder(this@Map)
-            builder.setTitle("No network connection")
-            builder.setMessage("Unable to load content. " +
-                    "Check your network connection and relaunch your app to try again")
+            builder.setTitle(getString(R.string.no_connection_title))
+            builder.setMessage(getString(R.string.no_connection_message))
             val dialog: AlertDialog = builder.create()
             dialog.show()
         }
@@ -359,8 +357,8 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
                         collectedCoins.add(coin.id)
 
                         val builder = AlertDialog.Builder(this@Map)
-                        builder.setTitle("Coin collected")
-                        builder.setMessage("You collected $coin!")
+                        builder.setTitle(getString(R.string.coin_collected))
+                        builder.setMessage(getString(R.string.you_collected) + " $coin!")
                         val dialog: AlertDialog = builder.create()
                         dialog.show()
 
@@ -481,11 +479,8 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
             enableLocation()
         } else {
             val builder = AlertDialog.Builder(this@Map)
-            builder.setTitle("Location permission not granted")
-            builder.setMessage("You denied permission to use location. " +
-                    "Without that information you cannot collect new coins. " +
-                    "Please accept access to location when you reopen the app " +
-                    "so you can enjoy Coinz to the fullest extent!")
+            builder.setTitle(getString(R.string.no_location_permission_title))
+            builder.setMessage(getString(R.string.no_location_permission_message))
             val dialog: AlertDialog = builder.create()
             dialog.show()
         }
@@ -565,7 +560,7 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
                 ?.document(email)
                 ?.collection(WALLET_KEY)
 
-        uploadWallet(walletCollection, coinWallet)
+        uploadCoins(walletCollection, coinWallet)
 
         // All objects are from android.context.Context
         val prefSettings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)

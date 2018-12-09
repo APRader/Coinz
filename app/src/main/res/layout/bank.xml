@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/bank_id"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -41,6 +39,7 @@
 
     <Button
         android:id="@+id/deposit_button_id"
+        style="@android:style/Widget.Material.Button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/deposit" />
@@ -56,13 +55,14 @@
         android:background="@android:color/darker_gray"/>
 
     <Button
-        android:id="@+id/convert_button_id"
+        android:id="@+id/conversion_button_id"
+        style="@android:style/Widget.Material.Button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/convert" />
 
     <FrameLayout
-        android:id="@+id/convert_placeholder"
+        android:id="@+id/conversion_placeholder"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 

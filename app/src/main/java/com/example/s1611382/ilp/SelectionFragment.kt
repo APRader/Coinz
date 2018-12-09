@@ -9,11 +9,19 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 
+
+/**
+ * Reusable fragment that displays a checkable list of the given array (coinList)
+ * and a button with given text (buttonText)
+ * when button is clicked, an interface is called that can be implemented by a class
+ * it returns the list items the user picked,
+ * as well as the selectionType string given to the fragment
+ */
 class SelectionFragment : ListFragment() {
-    private lateinit var coinList: ArrayList<Coin>
-    private var selectedCoins: ArrayList<Coin> = arrayListOf()
-    private var selectionType: String = ""
-    private var buttonText: String = "Continue"
+    private var coinList: ArrayList<Coin>? = arrayListOf()
+    private var selectedCoins: ArrayList<Coin>? = arrayListOf()
+    private var selectionType: String? = ""
+    private var buttonText: String? = "Continue"
 
     private lateinit var listener: OnCoinsSelected
 
@@ -25,9 +33,9 @@ class SelectionFragment : ListFragment() {
         buttonText = arguments!!.getString("textKey")
 
         val bankListAdapter = ArrayAdapter<Coin>(
-                activity,
+                activity!!,
                 android.R.layout.simple_list_item_multiple_choice,
-                coinList)
+                coinList!!)
 
         listAdapter = bankListAdapter
     }
@@ -46,7 +54,7 @@ class SelectionFragment : ListFragment() {
                 if (checkedCoins.get(i)) {
                     // all coins the user has checked will get converted when button is clicked
                     val coin = listView.getItemAtPosition(i) as Coin
-                    selectedCoins.add(coin)
+                    selectedCoins?.add(coin)
                 }
             }
             // alert bank activity that the converting has been completed and pass new wallet/bank
@@ -68,6 +76,6 @@ class SelectionFragment : ListFragment() {
 
     // used to alert the bank activity that user has deposited coins
     interface OnCoinsSelected {
-        fun onCoinsSelected(selectedCoins: ArrayList<Coin>, selectionType: String)
+        fun onCoinsSelected(selectedCoins: ArrayList<Coin>?, selectionType: String?)
     }
 }

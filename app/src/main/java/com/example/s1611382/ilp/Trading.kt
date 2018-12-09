@@ -2,9 +2,6 @@ package com.example.s1611382.ilp
 
 import android.app.AlertDialog
 import android.os.Bundle
-import android.support.v7.app.ActionBar
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.Toolbar
 import android.util.Log
 import android.view.View
 import android.widget.Button
@@ -91,8 +88,8 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
         builder.show()
     }
 
-    private fun sendCoins(recipient: String, sentCoins: ArrayList<Coin>) {
-        if (recipient != "") {
+    private fun sendCoins(recipient: String?, sentCoins: ArrayList<Coin>?) {
+        if (recipient != null) {
             val user = FirebaseAuth.getInstance().currentUser
             // Each document in the User collection of firestore represents a user
             // In the user's trading collection, every document represents a coin the user got
@@ -101,15 +98,17 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
                 val collection = firestore?.collection(COLLECTION_KEY)
                         ?.document(recipient)
                         ?.collection(TRADING_KEY)
-                for (coin in sentCoins) {
-                    // add coin to recipient's trading collection
-                    collection
-                            ?.add(coin)
-                            ?.addOnSuccessListener { Log.d(TAG, "Sent coin $coin") }
-                            ?.addOnFailureListener { e -> Log.e(TAG, e.message) }
+                if (sentCoins != null) {
+                    for (coin in sentCoins) {
+                        // add coin to recipient's trading collection
+                        collection
+                                ?.add(coin)
+                                ?.addOnSuccessListener { Log.d(TAG, "Sent coin $coin") }
+                                ?.addOnFailureListener { e -> Log.e(TAG, e.message) }
 
-                    // remove coin from sender's wallet
-                    coinWallet.remove(coin)
+                        // remove coin from sender's wallet
+                        coinWallet.remove(coin)
+                    }
                 }
             }
         }
@@ -197,8 +196,8 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
         val fragment = SelectionFragment()
         val args = Bundle()
         args.putParcelableArrayList(COINLIST, coinWallet)
-        args.putString(Bank.SELECTIONKEY, tradeSelection)
-        args.putString(Bank.TEXTKEY, "Send selected coins")
+        args.putString(SELECTION_KEY, tradeSelection)
+        args.putString(TEXT_KEY, "Send selected coins")
         fragment.arguments = args
         fragmentTransaction.replace(R.id.selection_placeholder, fragment)
         // adding to stack so we can pop it when we finish depositing coins (or when user presses back button)
@@ -206,7 +205,7 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
         fragmentTransaction.commit()
     }
 
-    override fun onCoinsSelected(selectedCoins: ArrayList<Coin>, selectionType: String) {
+    override fun onCoinsSelected(selectedCoins: ArrayList<Coin>?, selectionType: String?) {
         when (selectionType) {
             tradeSelection -> sendCoins(recipient, selectedCoins)
         }
