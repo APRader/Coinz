@@ -5,7 +5,7 @@ import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
 
 class TestConditions {
-    fun signOutUser(context: Context) {
-        AuthUI.getInstance().signOut(context)
+    fun signOutUser() {
+        FirebaseAuth.getInstance().signOut()
     }
 }

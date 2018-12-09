@@ -6,7 +6,6 @@ import android.content.Intent
 import android.graphics.BitmapFactory
 import android.location.Location
 import android.os.AsyncTask
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.design.widget.NavigationView
 import android.support.v4.view.GravityCompat
@@ -14,15 +13,12 @@ import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBar
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.Toolbar
-import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import com.example.s1611382.ilp.Map.DownloadCompleteRunner.result
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.FirebaseFirestoreSettings
-import com.google.gson.Gson
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineListener
 import com.mapbox.android.core.location.LocationEnginePriority
@@ -44,9 +40,8 @@ import com.mapbox.mapboxsdk.annotations.IconFactory
 import com.mapbox.mapboxsdk.annotations.Marker
 import com.mapbox.mapboxsdk.annotations.MarkerOptions
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback
-import kotlinx.android.synthetic.main.wallet.*
-import org.jetbrains.anko.doAsync
 import org.json.JSONObject
+import timber.log.Timber
 import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection
@@ -57,13 +52,12 @@ import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
 
-class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, OnMapReadyCallback {
+class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapReadyCallback {
 
-    private val tag = "Map"
     private var mapView: MapView? = null
     private var map: MapboxMap? = null
-    private var downloadDate = "" // Format: YYYY/MM/DD
-    private var lastJson = ""
+    private var downloadDate: String? = "" // Format: YYYY/MM/DD
+    private var lastJson: String? = ""
     private val preferencesFile = "MyPrefsFile" // for storing preferences
 
     // each item in the list contains a coin and its corresponding marker
@@ -79,8 +73,7 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
     private lateinit var permissionManager: PermissionsManager
     //stores current location at all times
     private lateinit var originLocation: Location
-    //contains GeoJson features
-    private lateinit var coinCollection: FeatureCollection
+
     private lateinit var features: List<Feature>
     // exchange rates of the day
     private var rates: HashMap<String, Float> = hashMapOf()
@@ -91,27 +84,11 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
     private lateinit var locationLayerPlugin: LocationLayerPlugin
 
     private var firestore: FirebaseFirestore? = null
-    private val COLLECTION_KEY = "Users"
-    private val WALLET_KEY = "Wallet"
-
-    companion object {
-        private const val TAG = "Map"
-        val COINWALLET = "coinWallet"
-        val RATES = "rates"
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        //need toolbar for app nav drawer button
-        val toolbar: Toolbar = findViewById(R.id.toolbar)
-        setSupportActionBar(toolbar)
-        val actionbar: ActionBar? = supportActionBar
-        actionbar?.apply {
-            setDisplayHomeAsUpEnabled(true)
-            setHomeAsUpIndicator(R.drawable.ic_menu)
-        }
+        setContentView(R.layout.map)
+        setToolbar()
 
         Mapbox.getInstance(this, getString(R.string.access_token))
         mapView = findViewById(R.id.mapView)
@@ -120,14 +97,11 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
         mapView?.getMapAsync(this)
 
         mDrawerLayout = findViewById(R.id.drawer_layout)
-
         val navigationView: NavigationView = findViewById(R.id.nav_view)
         navigationView.setNavigationItemSelectedListener { menuItem ->
             // close drawer when item is tapped
             mDrawerLayout.closeDrawers()
 
-            // Add code here to update the UI based on the item selected
-            // For example, swap UI fragments here
             if (menuItem.itemId == R.id.nav_wallet) {
                 openWallet()
             }
@@ -148,33 +122,30 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
             if (::originLocation.isInitialized) {
                 setCameraPosition(originLocation)
             } else {
-                Log.d(tag, "[fab] originLocation not initialized")
+                Timber.d("originLocation not initialized")
             }
         }
 
     }
 
+    /**
+     * gets wallet data from firebase
+     * only draws coins after query is finished,
+     * so that method knows which coins are already collected
+     */
     override fun onMapReady(mapboxMap: MapboxMap?) {
         if (mapboxMap == null) {
-            Log.d(tag, "[onMapReady] mapBoxMap is null")
+            Timber.d("mapBoxMap is null")
         } else {
             map = mapboxMap
             map?.uiSettings?.isCompassEnabled = true
             map?.uiSettings?.isZoomControlsEnabled = true
 
-            // Make location information available
             enableLocation()
 
-            firestore = FirebaseFirestore.getInstance()
-            // Use com.google.firebase.Timestamp objects instead of java.util.Date objects
-            val firebaseSettings = FirebaseFirestoreSettings.Builder()
-                    .setTimestampsInSnapshotsEnabled(true)
-                    .build()
-            firestore?.firestoreSettings = firebaseSettings
-
+            firestore = firestoreSetup()
             val user = FirebaseAuth.getInstance().currentUser
             val email = user?.email.toString()
-
             val walletCollection = firestore?.collection(COLLECTION_KEY)
                     ?.document(email)
                     ?.collection(WALLET_KEY)
@@ -183,8 +154,6 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
                     ?.addOnSuccessListener { documents ->
                         for (document in documents) {
                             val data = document.data
-                            //TODO: catch if they are not right type
-                            // traded value in coin is set to 1
                             val coin = Coin(id = data["id"].toString(),
                                     value = data["value"].toString().toFloat(),
                                     currency = data["currency"].toString())
@@ -196,9 +165,7 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
                         // Get the GeoJSON marker coordinates from the web
                         downloadMap()
                     }
-                    ?.addOnFailureListener { exception ->
-                        print(exception)
-                    }
+                    ?.addOnFailureListener { e -> Timber.e(e.message) }
         }
     }
 
@@ -208,7 +175,7 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
             initializeLocationEngine()
             initializeLocationLayer()
         } else {
-            Log.d(tag, "Permissions are not granted")
+            Timber.d("Permissions are not granted")
             permissionManager = PermissionsManager(this)
             permissionManager.requestLocationPermissions(this)
         }
@@ -217,7 +184,6 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
     @SuppressLint("MissingPermission")
     private fun initializeLocationEngine() {
         locationEngine = LocationEngineProvider(this).obtainBestLocationEngineAvailable()
-        //locationEngine.addLocationEngineListener(this)
         locationEngine.apply {
             interval = 5000
             fastestInterval = 1000
@@ -233,14 +199,14 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
     }
 
     private fun initializeLocationLayer() {
-        if (mapView == null) { Log.d(tag, "mapView is null") }
+        if (mapView == null) { Timber.d("mapView is null") }
         else {
-            if (map == null) { Log.d(tag, "map is null") }
+            if (map == null) { Timber.d("map is null") }
             else {
                 locationLayerPlugin = LocationLayerPlugin(mapView!!, map!!, locationEngine)
                 //for camera tracking location
                 locationLayerPlugin.apply {
-                    setLocationLayerEnabled(true)
+                    isLocationLayerEnabled = true
                     cameraMode = CameraMode.TRACKING
                     renderMode = RenderMode.NORMAL
                 }
@@ -249,40 +215,45 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
     }
 
     private fun setCameraPosition(location: Location) {
-        if (location == null) {
-            Log.d(tag, "[setCameraPosition] location is null")
-        } else {
+        // location is never null according to AndroidStudio
+        //if (location == null) {
+          //  Timber.d("location is null")
+       // } else {
             map?.animateCamera(CameraUpdateFactory.newLatLngZoom(
                     LatLng(location.latitude, location.longitude), 15.5))
-        }
+        //}
     }
 
     private fun openWallet() {
         val walletIntent = Intent(this, Wallet::class.java)
-        walletIntent.putExtra(COINWALLET, coinWallet)
+        walletIntent.putExtra(COIN_WALLET, coinWallet)
         startActivity(walletIntent)
     }
 
     private fun openBank() {
         val bankIntent = Intent(this, Bank::class.java)
         bankIntent.putExtra(RATES, rates)
-        bankIntent.putExtra(COINWALLET, coinWallet)
+        bankIntent.putExtra(COIN_WALLET, coinWallet)
         startActivity(bankIntent)
     }
 
     private fun openTrading() {
         val tradingIntent = Intent(this, Trading::class.java)
-        tradingIntent.putExtra(COINWALLET, coinWallet)
+        tradingIntent.putExtra(COIN_WALLET, coinWallet)
         startActivity(tradingIntent)
     }
 
+    /**
+     * uses a JSON file to draw the markers
+     * only draws coins that are not already collected
+     */
     private fun drawCoinLocations(JsonFile : String?) {
 
-        coinCollection = FeatureCollection.fromJson(JsonFile.toString())
+        val coinCollection = FeatureCollection.fromJson(JsonFile.toString())
 
         features = coinCollection.features() as List<Feature>
 
-        val reader = JSONObject(lastJson.toString())
+        val reader = JSONObject(lastJson)
         val sys = reader.getJSONObject("rates")
         val shil = sys.getString("SHIL").toFloat()
         val dolr = sys.getString("DOLR").toFloat()
@@ -299,7 +270,9 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
             if (f.geometry() is Point) {
                 val coordinates = (f.geometry() as Point).coordinates()
 
-                val coinValue = f.properties()?.get("value").toString().removeSurrounding("\"")
+                // extracting relevant data from the Json
+                val coinValue = f.properties()?.get("value").toString()
+                        .removeSurrounding("\"")
                 val coinColour = f.properties()?.get("marker-color").toString()
                         .removeSurrounding("\"").removePrefix("#")
                 val coinSymbol = f.properties()?.get("marker-symbol").toString()
@@ -309,7 +282,7 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
                 val coinId = f.properties()?.get("id").toString()
                         .removeSurrounding("\"")
                 val coin = Coin(id = coinId, value = coinValue.toFloat(), currency = coinCurrency)
-                // don't draw coin if it was already collected, except when it was traded
+                // don't draw coin if it was already collected
                 if (!collectedCoins.contains(coin.id)) {
                     // getting the Icon for the specific coin using BitmapFactory
                     val pin = "pin_$coinSymbol" + "_$coinColour"
@@ -319,6 +292,7 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
 
                     val markerOpt = MarkerOptions().position(LatLng(coordinates[1], coordinates[0]))
                             .title("$coinCurrency $coinValue").icon(coinIcon)
+
                     // We need the marker, not the marker option saved in the list, so we can remove it later
                     val marker: Marker? = map?.addMarker(markerOpt)
                     val pair = Pair(coin, marker)
@@ -330,6 +304,11 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
         }
     }
 
+    /**
+     * downloads JSON map from the website
+     * only calls drawCoinLocations if the Json file could be downloaded and is valid
+     * otherwise it shows message telling user to check their network connection
+     */
     private fun downloadMap()   {
         // get current date
         // update download date as a string
@@ -341,9 +320,9 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
             val task = DownloadFileTask(DownloadCompleteRunner)
             lastJson = task.execute("http://homepages.inf.ed.ac.uk/stg/coinz/$today/coinzmap.geojson").get()
         }
-        // check if Json contains valid coin data (i.e. download was successful)
 
-        if (lastJson.startsWith("\n{\n")){
+        // check if Json contains valid coin data (i.e. download was successful)
+        if (lastJson!!.startsWith("\n{\n")){
             drawCoinLocations(lastJson)
             //only update download date if download was successful and coins are drawn
             downloadDate = today
@@ -357,13 +336,16 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
         }
     }
 
+    /**
+     * automatically collects coins if player is within 25 metres of it
+     * shows message which coin was collected
+     */
     private fun nearCoin(location: Location?) {
         if (::features.isInitialized) {
-            //check if player is near a coin
             // need to use iterator, to be able to remove pair in loop
-            var it = markerPairs.iterator()
+            val it = markerPairs.iterator()
             while (it.hasNext()) {
-                var p = it.next()
+                val p = it.next()
                 val coinLocation = Location("")
                 val marker = p.second
                 if (marker != null) {
@@ -372,14 +354,15 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
                     //player is within 25 metres of the coin
                     if (location!!.distanceTo(coinLocation) <= 25) {
                         val coin = p.first
-                        val coinId = coin.id
                         coinWallet.add(coin)
                         collectedCoins.add(coin.id)
+
                         val builder = AlertDialog.Builder(this@Map)
                         builder.setTitle("Coin collected")
                         builder.setMessage("You collected $coin!")
                         val dialog: AlertDialog = builder.create()
                         dialog.show()
+
                         // coin is deleted from map and markerPairs
                         map?.removeMarker(marker)
                         it.remove()
@@ -388,10 +371,14 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
             }
 
         } else {
-            Log.d(tag, "features is empty")
+            Timber.d("features is empty")
         }
     }
 
+    /**
+     * logs out user
+     * user is put onto login screen
+     */
     private fun logout() {
         AuthUI.getInstance()
                 .signOut(this)
@@ -451,8 +438,23 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
         }
     }
 
+    /**
+     * only map has toolbar with app drawer button
+     * therefore we override the method that creates toolbar with up navigation
+     */
+    override fun setToolbar() {
+        val toolbar: Toolbar = findViewById(R.id.toolbar)
+        setSupportActionBar(toolbar)
+        val actionbar: ActionBar? = supportActionBar
+        actionbar?.apply {
+            setDisplayHomeAsUpEnabled(true)
+            setHomeAsUpIndicator(R.drawable.ic_menu)
+        }
+    }
 
-    //open the drawer when nav button is tapped
+    /**
+     * opens the drawer when nav button is tapped
+     */
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         return when (item?.itemId) {
             android.R.id.home -> {
@@ -463,8 +465,10 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
         }
     }
 
-    //-- from PermissionsListener --//
-    //when user denies permission
+    /**
+     * from PermissionsListener
+     * when user denies or accepts permission
+     */
     override fun onExplanationNeeded(permissionsToExplain: MutableList<String>?) {
         /*seems to trigger when location previously not granted when app opens
         but doesn't trigger when first denied.
@@ -488,24 +492,24 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
         permissionManager.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
-    //-- from LocationEngineListener --//
+    /**
+     * from LocationEngineListener
+     * sets originLocation to new location to be used by other methods
+     */
     override fun onLocationChanged(location: Location?) {
         if (location == null) {
-            Log.d(tag, "[onLocationChanged] location is null")
+            Timber.d("[onLocationChanged] location is null")
         } else {
             originLocation = location
-            //setCameraPosition(originLocation)
             nearCoin(location)
         }
     }
     @SuppressLint("MissingPermission")
     override fun onConnected() {
-        Log.d(tag, "[onConnected] requesting location updates")
+        Timber.d("[onConnected] requesting location updates")
         locationEngine.requestLocationUpdates()
     }
 
-
-    // lifecycle methods for MapBox override standard funs
     @SuppressLint("MissingPermission")
     override fun onStart() {
         super.onStart()
@@ -514,6 +518,8 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
         if (::locationLayerPlugin.isInitialized) {
             locationLayerPlugin.onStart()
             locationEngine.requestLocationUpdates()
+        } else {
+            Timber.d("locationLayerPlugin not initialized")
         }
 
         // Restore preferences
@@ -522,11 +528,7 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
         // use "" as the default value (this might be the first time the app is run)
         downloadDate = prefSettings.getString("lastDownloadDate", "")
         lastJson = prefSettings.getString("lastJson", "")
-
-        Log.d(tag, "[onStart] Recalled lastDownloadDate is '$downloadDate'")
-        Log.d(tag, "[onStart] Recalled lastJson is '$lastJson'")
     }
-
     override fun onResume() {
         super.onResume()
         mapView?.onResume()
@@ -537,23 +539,15 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
     }
     override fun onStop() {
         super.onStop()
-        // the next two lines break the location listening when you go out and into the app
         if (::locationLayerPlugin.isInitialized) {
             locationEngine.removeLocationUpdates()
             locationLayerPlugin.onStop()
+        } else {
+            Timber.d("locationLayerPlugin not initialized")
         }
         mapView?.onStop()
 
-        Log.d(tag, "[onStop] Storing lastDownloadDate of $downloadDate")
-        Log.d(tag, "[onStop] Storing lastJson of $lastJson")
-
-
-        firestore = FirebaseFirestore.getInstance()
-        // Use com.google.firebase.Timestamp objects instead of java.util.Date objects
-        val firebaseSettings = FirebaseFirestoreSettings.Builder()
-                .setTimestampsInSnapshotsEnabled(true)
-                .build()
-        firestore?.firestoreSettings = firebaseSettings
+        firestore = firestoreSetup()
 
         val user = FirebaseAuth.getInstance().currentUser
         val email = user?.email.toString()
@@ -562,25 +556,7 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
                 ?.document(email)
                 ?.collection(WALLET_KEY)
 
-        // delete all coins in firebase,
-        walletCollection?.get()
-                ?.addOnSuccessListener { documents ->
-                    for (document in documents) {
-                        document.reference.delete()
-                                .addOnSuccessListener { print("success") }
-                                .addOnFailureListener{ print(":(")}
-                        }
-                    // add current coins into firebase
-                    for (coin in coinWallet) {
-                        walletCollection
-                                ?.add(coin)
-                                ?.addOnSuccessListener { Log.d(TAG, "Sent coin $coin") }
-                                ?.addOnFailureListener { e -> Log.e(TAG, e.message) }
-                    }
-                    }
-                ?.addOnFailureListener {exception ->
-                    print(exception)
-                }
+        uploadWallet(walletCollection, coinWallet)
 
 
         // All objects are from android.context.Context
@@ -591,11 +567,6 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
         editor.putString("lastDownloadDate", downloadDate)
         editor.putString("lastJson", lastJson)
 
-        // to save coinWallet, we need to convert it into JSON using GSON
-        val gson = Gson()
-        editor.putString("lastCoinWallet", gson.toJson(coinWallet))
-        editor.putString("collectedCoins", gson.toJson(collectedCoins))
-
         // Apply the edits!
         editor.apply()
     }
@@ -605,6 +576,8 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
         mapView?.onDestroy()
         if (::locationLayerPlugin.isInitialized) {
             locationEngine.deactivate()
+        } else {
+            Timber.d("locationLayerPlugin not initialized")
         }
     }
     override fun onSaveInstanceState(outState: Bundle?) {

@@ -1,13 +1,10 @@
 package com.example.s1611382.ilp
 
 import android.os.Bundle
-import android.support.v7.app.ActionBar
-import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.Toolbar
 
-class Wallet : AppCompatActivity() {
+class Wallet : BaseActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var viewAdapter: RecyclerView.Adapter<*>
     private lateinit var viewManager: RecyclerView.LayoutManager
@@ -15,16 +12,12 @@ class Wallet : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.wallet)
+        setToolbar()
 
-        //need toolbar for app nav drawer button
-
-        val toolbar: Toolbar = findViewById(R.id.toolbar)
-        setSupportActionBar(toolbar)
-        val actionbar: ActionBar? = supportActionBar
-        // creates up navigation to get back to parent activity (main map)
-        actionbar?.setDisplayHomeAsUpEnabled(true)
-
-        val coinWallet: ArrayList<Coin> = intent.extras.getParcelableArrayList(Map.COINWALLET)
+        var coinWallet: ArrayList<Coin>? = intent?.extras?.getParcelableArrayList(COIN_WALLET)
+        if (coinWallet == null) {
+            coinWallet = arrayListOf()
+        }
 
         viewManager = LinearLayoutManager(this)
         viewAdapter = WalletAdapter(coinWallet)

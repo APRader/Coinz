@@ -39,9 +39,8 @@ public class LoginSuccessfulTest {
     public ActivityTestRule<Login> mActivityTestRule = new ActivityTestRule<Login>(Login.class) {
         @Override
         public void beforeActivityLaunched() {
-            Context appContext = InstrumentationRegistry.getTargetContext();
             TestConditions tc = new TestConditions();
-            tc.signOutUser(appContext);
+            tc.signOutUser();
         }
     };
 

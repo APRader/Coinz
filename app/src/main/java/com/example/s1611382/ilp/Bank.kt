@@ -1,7 +1,9 @@
 package com.example.s1611382.ilp
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
+import android.support.v4.app.NavUtils
 import android.support.v7.app.ActionBar
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
@@ -13,14 +15,12 @@ import android.widget.TextView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
-class Bank: AppCompatActivity(), SelectionFragment.OnCoinsSelected {
+class Bank: BaseActivity(), SelectionFragment.OnCoinsSelected {
     private val preferencesFile = "MyPrefsFile" // for storing preferences
     private var gold: Double? = 0.0
     private lateinit var rates: HashMap<String, Float>
@@ -49,14 +49,10 @@ class Bank: AppCompatActivity(), SelectionFragment.OnCoinsSelected {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.bank)
+        setToolbar()
 
-        val toolbar: Toolbar = findViewById(R.id.toolbar)
-        setSupportActionBar(toolbar)
-        val actionbar: ActionBar? = supportActionBar
-        actionbar?.setDisplayHomeAsUpEnabled(true)
-
-        rates = intent.extras.getSerializable(Map.RATES) as HashMap<String, Float>
-        coinWallet = intent.extras.getParcelableArrayList(Map.COINWALLET)
+        rates = intent.extras.getSerializable(RATES) as HashMap<String, Float>
+        coinWallet = intent.extras.getParcelableArrayList(COIN_WALLET)
 
         val ratesView: TextView = findViewById(R.id.rates_id)
         var ratesText = "No rates available"
@@ -345,12 +341,22 @@ class Bank: AppCompatActivity(), SelectionFragment.OnCoinsSelected {
     }
 
     override fun onBackPressed() {
-        super.onBackPressed()
         // when user presses back button, fragment will be closed, so we need to set button that launched fragment to visible
         val depositButton: Button = findViewById(R.id.deposit_button_id)
         val convertButton: Button = findViewById(R.id.convert_button_id)
         depositButton.visibility = View.VISIBLE
         convertButton.visibility = View.VISIBLE
+        val yeet = supportFragmentManager
+
+        // because wallet can be changed, the map has to be redrawn
+        // back navigation would not call onMapReady again on the map activity
+        // therefore we call upNavigation instead of back navigation
+        // only open map if no fragment is open
+        if (yeet.backStackEntryCount == 0) {
+            NavUtils.navigateUpFromSameTask(this)
+        }
+
+        super.onBackPressed()
     }
 
 }

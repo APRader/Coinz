@@ -7,12 +7,10 @@
     style="?android:buttonBarStyle"
     android:dividerPadding="15dp">
 
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/toolbar"
+    <include
+        layout="@layout/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="?android:attr/actionBarSize"
-        android:background="@color/colorPrimary"
-        android:theme="@style/ThemeOverlay.AppCompat.ActionBar" />
+        android:layout_height="wrap_content"/>
 
     <Button
         android:id="@+id/trade_button_id"

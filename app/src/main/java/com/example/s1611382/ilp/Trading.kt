@@ -1,7 +1,6 @@
 package com.example.s1611382.ilp
 
 import android.app.AlertDialog
-import android.content.Context
 import android.os.Bundle
 import android.support.v7.app.ActionBar
 import android.support.v7.app.AppCompatActivity
@@ -12,9 +11,8 @@ import android.widget.Button
 import android.widget.EditText
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.*
-import com.google.gson.Gson
 
-class Trading : AppCompatActivity(), SelectionFragment.OnCoinsSelected{
+class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
     private val preferencesFile = "MyPrefsFile" // for storing preferences
     private val RC_SIGN_IN = 123
     private var firestore: FirebaseFirestore? = null
@@ -39,15 +37,10 @@ class Trading : AppCompatActivity(), SelectionFragment.OnCoinsSelected{
 
     override fun onCreate(savedInstanceState: Bundle?   ) {
         super.onCreate(savedInstanceState)
-
         setContentView(R.layout.trading)
+        setToolbar()
 
-        val toolbar: Toolbar = findViewById(R.id.toolbar)
-        setSupportActionBar(toolbar)
-        val actionbar: ActionBar? = supportActionBar
-        actionbar?.setDisplayHomeAsUpEnabled(true)
-
-        coinWallet = intent.extras.getParcelableArrayList(Map.COINWALLET)
+        coinWallet = intent.extras.getParcelableArrayList(COIN_WALLET)
 
         firestore = FirebaseFirestore.getInstance()
         // Use com.google.firebase.Timestamp objects instead of java.util.Date objects

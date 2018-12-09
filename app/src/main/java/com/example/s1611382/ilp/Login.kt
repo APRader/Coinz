@@ -12,7 +12,7 @@ import com.google.firebase.auth.FirebaseAuth
 class Login : AppCompatActivity() {
 
     companion object {
-        const val RC_SIGN_IN = 123
+        private const val RC_SIGN_IN = 123
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
