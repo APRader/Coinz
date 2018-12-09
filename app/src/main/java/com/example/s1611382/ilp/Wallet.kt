@@ -9,6 +9,9 @@ class Wallet : BaseActivity() {
     private lateinit var viewAdapter: RecyclerView.Adapter<*>
     private lateinit var viewManager: RecyclerView.LayoutManager
 
+    /**
+     * uses WalletAdapter to draw a list of coins in user's wallet
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.wallet)

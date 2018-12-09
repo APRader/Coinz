@@ -6,6 +6,10 @@ import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.coin_text_view.view.*
 
+/**
+ * uses RecyclerView to show list of coins in wallet
+ * each entry is an inflated textView for the coin
+ */
 class WalletAdapter(private val myDataset: ArrayList<Coin>) :
         RecyclerView.Adapter<WalletAdapter.MyViewHolder>() {
 
@@ -21,6 +25,7 @@ class WalletAdapter(private val myDataset: ArrayList<Coin>) :
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         holder.textView.text = myDataset[position].toString()
         var drawable = R.drawable.ic_copyright_black_24dp
+        // depending on the currency, a different picture is drawn
         when (myDataset[position].currency) {
             "SHIL" -> drawable = R.drawable.coin_blue
             "DOLR" -> drawable = R.drawable.coin_green

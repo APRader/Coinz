@@ -16,6 +16,7 @@ abstract class BaseActivity : AppCompatActivity() {
         const val RATES = "rates"
         const val COLLECTION_KEY = "Users"
         const val WALLET_KEY = "Wallet"
+        const val PREF_FILE = "MyPrefsFile"
     }
 
     open fun setToolbar() {

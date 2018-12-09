@@ -56,34 +56,30 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
 
     private var mapView: MapView? = null
     private var map: MapboxMap? = null
-    private var downloadDate: String? = "" // Format: YYYY/MM/DD
-    private var lastJson: String? = ""
-    private val preferencesFile = "MyPrefsFile" // for storing preferences
-
-    // each item in the list contains a coin and its corresponding marker
-    private var markerPairs: MutableList<Pair<Coin, Marker?>> = mutableListOf()
-
-    // each item in the list contains a coin with its different properties
-    private var coinWallet : ArrayList<Coin> = arrayListOf()
-
-    //different from wallet: it stores which coins were collected today, you can empty wallet, but not this
-    private var collectedCoins : ArrayList<String> = arrayListOf()
-
-    private lateinit var mDrawerLayout: DrawerLayout
-    private lateinit var permissionManager: PermissionsManager
-    //stores current location at all times
-    private lateinit var originLocation: Location
-
-    private lateinit var features: List<Feature>
-    // exchange rates of the day
-    private var rates: HashMap<String, Float> = hashMapOf()
-
     //gives user location
     private lateinit var locationEngine: LocationEngine
     //for UI: icon representing user location
     private lateinit var locationLayerPlugin: LocationLayerPlugin
-
+    private lateinit var mDrawerLayout: DrawerLayout
+    private lateinit var permissionManager: PermissionsManager
     private var firestore: FirebaseFirestore? = null
+
+    // shared preference variables
+    private var downloadDate: String? = "" // Format: YYYY/MM/DD
+    private var lastJson: String? = ""
+
+    // each item in the list contains a coin and its corresponding marker
+    private var markerPairs: MutableList<Pair<Coin, Marker?>> = mutableListOf()
+    // each item in the list contains a coin with its different properties
+    private var coinWallet : ArrayList<Coin> = arrayListOf()
+    // different from wallet: it stores coins which you collected (not traded)
+    private var collectedCoins : ArrayList<String> = arrayListOf()
+    // Json features of the downloaded file
+    private lateinit var features: List<Feature>
+    // exchange rates of the day
+    private var rates: HashMap<String, Float> = hashMapOf()
+    //stores current location at all times
+    private lateinit var originLocation: Location
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -131,7 +127,7 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
     /**
      * gets wallet data from firebase
      * only draws coins after query is finished,
-     * so that method knows which coins are already collected
+     * so that drawing method knows which coins are already collected
      */
     override fun onMapReady(mapboxMap: MapboxMap?) {
         if (mapboxMap == null) {
@@ -169,7 +165,9 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
         }
     }
 
-    //get user's permission for location
+    /**
+     * get user's permission for location
+     */
     private fun enableLocation() {
         if (PermissionsManager.areLocationPermissionsGranted(this)) {
             initializeLocationEngine()
@@ -181,6 +179,10 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
         }
     }
 
+
+    /**
+     * functions for Mapbox to get user@s location
+     */
     @SuppressLint("MissingPermission")
     private fun initializeLocationEngine() {
         locationEngine = LocationEngineProvider(this).obtainBestLocationEngineAvailable()
@@ -197,7 +199,6 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
             setCameraPosition(lastLocation)
         } else { locationEngine.addLocationEngineListener(this) }
     }
-
     private fun initializeLocationLayer() {
         if (mapView == null) { Timber.d("mapView is null") }
         else {
@@ -213,7 +214,6 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
             }
         }
     }
-
     private fun setCameraPosition(location: Location) {
         // location is never null according to AndroidStudio
         //if (location == null) {
@@ -224,19 +224,20 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
         //}
     }
 
+    /**
+     * open the other activities from the navigation drawer
+     */
     private fun openWallet() {
         val walletIntent = Intent(this, Wallet::class.java)
         walletIntent.putExtra(COIN_WALLET, coinWallet)
         startActivity(walletIntent)
     }
-
     private fun openBank() {
         val bankIntent = Intent(this, Bank::class.java)
         bankIntent.putExtra(RATES, rates)
         bankIntent.putExtra(COIN_WALLET, coinWallet)
         startActivity(bankIntent)
     }
-
     private fun openTrading() {
         val tradingIntent = Intent(this, Trading::class.java)
         tradingIntent.putExtra(COIN_WALLET, coinWallet)
@@ -389,10 +390,12 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
                 }
     }
 
+    /**
+     * task for downloading Json data asynchronously
+     */
     interface DownloadCompleteListener {
         fun downloadComplete(result: String)
     }
-
     object DownloadCompleteRunner : DownloadCompleteListener {
         var result : String? = null
         override fun downloadComplete(result: String) {
@@ -400,7 +403,6 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
 
         }
     }
-
     class DownloadFileTask(private val caller : DownloadCompleteListener):
             AsyncTask<String, Void, String>() {
 
@@ -510,6 +512,9 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
         locationEngine.requestLocationUpdates()
     }
 
+    /**
+     * gets values from shared preferences
+     */
     @SuppressLint("MissingPermission")
     override fun onStart() {
         super.onStart()
@@ -523,12 +528,13 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
         }
 
         // Restore preferences
-        val prefSettings = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE)
+        val prefSettings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
 
         // use "" as the default value (this might be the first time the app is run)
         downloadDate = prefSettings.getString("lastDownloadDate", "")
         lastJson = prefSettings.getString("lastJson", "")
     }
+
     override fun onResume() {
         super.onResume()
         mapView?.onResume()
@@ -537,6 +543,10 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
         super.onPause()
         mapView?.onPause()
     }
+
+    /**
+     * saves values to firebase and shared preferences
+     */
     override fun onStop() {
         super.onStop()
         if (::locationLayerPlugin.isInitialized) {
@@ -551,23 +561,19 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
 
         val user = FirebaseAuth.getInstance().currentUser
         val email = user?.email.toString()
-
         val walletCollection = firestore?.collection(COLLECTION_KEY)
                 ?.document(email)
                 ?.collection(WALLET_KEY)
 
         uploadWallet(walletCollection, coinWallet)
 
-
         // All objects are from android.context.Context
-        val prefSettings = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE)
+        val prefSettings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
 
-        // We need an Editor object o make preference changes
+        // We need an Editor object to make preference changes
         val editor = prefSettings.edit()
         editor.putString("lastDownloadDate", downloadDate)
         editor.putString("lastJson", lastJson)
-
-        // Apply the edits!
         editor.apply()
     }
 
