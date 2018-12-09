@@ -7,11 +7,13 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.Toast
 import com.firebase.ui.auth.AuthUI
-import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
 
 class Login : AppCompatActivity() {
-    private val RC_SIGN_IN = 123
+
+    companion object {
+        const val RC_SIGN_IN = 123
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
