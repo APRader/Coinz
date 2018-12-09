@@ -538,8 +538,10 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
     override fun onStop() {
         super.onStop()
         // the next two lines break the location listening when you go out and into the app
-        locationEngine.removeLocationUpdates()
-        locationLayerPlugin.onStop()
+        if (::locationLayerPlugin.isInitialized) {
+            locationEngine.removeLocationUpdates()
+            locationLayerPlugin.onStop()
+        }
         mapView?.onStop()
 
         Log.d(tag, "[onStop] Storing lastDownloadDate of $downloadDate")
@@ -601,7 +603,9 @@ class Map : AppCompatActivity(), PermissionsListener, LocationEngineListener, On
     override fun onDestroy() {
         super.onDestroy()
         mapView?.onDestroy()
-        locationEngine.deactivate()
+        if (::locationLayerPlugin.isInitialized) {
+            locationEngine.deactivate()
+        }
     }
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)

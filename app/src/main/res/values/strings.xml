@@ -15,6 +15,10 @@
     <string name="email">Email address</string>
     <string name="receive_coins">Receive coins</string>
     <string name="rates">Today\'s rates: 1 GOLD =</string>
-    <string name="login">Welcome to Coinz! In order to play, please log in or register a new account.</string>
+
+
+    <!-- Login strings -->
+    <string name="login_start_text">Welcome to Coinz! In order to play, please log in or register a new account.</string>
     <string name="login_button">Log in/register</string>
+    <string name="login_failed_message">Log in failed</string>
 </resources>
