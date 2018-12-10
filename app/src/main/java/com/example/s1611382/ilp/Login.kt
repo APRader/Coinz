@@ -1,15 +1,32 @@
 package com.example.s1611382.ilp
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
-import android.support.v7.app.AppCompatActivity
+import android.content.SharedPreferences
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.Toast
 import com.firebase.ui.auth.AuthUI
+import com.google.common.reflect.TypeToken
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QueryDocumentSnapshot
+import com.google.gson.Gson
+import timber.log.Timber
+import java.lang.reflect.Type
 
-class Login : AppCompatActivity() {
+class Login : BaseActivity() {
+    private var firestore: FirebaseFirestore? = null
+    private var coinWallet : ArrayList<Coin> = arrayListOf()
+    private var collectedCoins : ArrayList<String> = arrayListOf()
+    private var coinBank : ArrayList<Coin> = arrayListOf()
+    private var user: FirebaseUser? = null
+    private lateinit var email: String
+    private lateinit var loginButton: Button
 
     companion object {
         private const val RC_SIGN_IN = 123
@@ -18,18 +35,69 @@ class Login : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val user = FirebaseAuth.getInstance().currentUser
+        user = FirebaseAuth.getInstance().currentUser
 
         // launches map if user already logged in
-        if (user != null) { openMap() }
+        if (user != null) { downloadCoins() }
+        else {
+            // if user is not logged in, start text and a login button are displayed
+            setContentView(R.layout.login)
+            loginButton = findViewById(R.id.login_button_id)
+            loginButton.setOnClickListener { _ -> login() }
+        }
+    }
 
-        // if user is not logged in, start text and a login button are displayed
-        setContentView(R.layout.login)
-        val loginButton : Button = findViewById(R.id.login_button_id)
-        loginButton.setOnClickListener { _ -> login() }
+    /**
+     * informs user that data is downloading
+     */
+    private fun downloadCoins() {
+        Toast.makeText(this, getString(R.string.download), Toast.LENGTH_SHORT).show()
+        firestoreDownload()
+    }
+
+    /**
+     * downloads fields from firebase and stores them in shared preferences
+     */
+    private fun firestoreDownload() {
+        firestore = firestoreSetup()
+
+        user = FirebaseAuth.getInstance().currentUser
+        email = user?.email.toString()
+
+        firestore?.collection(COLLECTION_KEY)
+                ?.document(email)
+                ?.get()
+                ?.addOnSuccessListener { document ->
+                    val gold = document.data?.get(GOLD_KEY) as Double?
+                    val depositCounter: Int? = document.data?.get(COUNTER_KEY).toString().toInt()
+                    var walletString = document.data?.get(WALLET_KEY).toString()
+                    var bankString = document.data?.get(BANK_KEY).toString()
+                    var collectedString = document.data?.get(COLLECTED_KEY).toString()
+
+                    walletString = nullList(walletString)
+                    bankString = nullList(bankString)
+                    collectedString = nullList(collectedString)
+
+                    val settings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
+                    val editor = settings.edit()
+                    editor.putString(GOLD_KEY, gold.toString())
+                    editor.putString(COUNTER_KEY, depositCounter.toString())
+                    editor.putString(WALLET_KEY, walletString)
+                    editor.putString(BANK_KEY, bankString)
+                    editor.putString(COLLECTED_KEY, collectedString)
+                    editor.apply()
+
+                    openMap()
+                }
+                ?.addOnFailureListener {e ->
+                    Timber.e(e.message)
+                    // document doesn't exist
+                    openMap()
+                }
     }
 
     private fun openMap() {
+
         val mapIntent = Intent(this, Map::class.java)
         startActivity(mapIntent)
         finish()
@@ -63,7 +131,8 @@ class Login : AppCompatActivity() {
         if (requestCode == RC_SIGN_IN) {
             if (resultCode == Activity.RESULT_OK) {
                 // login successful
-                openMap()
+                loginButton.visibility = View.GONE
+                downloadCoins()
             } else {
                 // user did not login, so we stay at login screen
                 Toast.makeText(this, getString(R.string.login_failed_message), Toast.LENGTH_SHORT).show()

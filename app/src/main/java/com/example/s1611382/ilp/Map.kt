@@ -18,7 +18,6 @@ import android.view.View
 import com.example.s1611382.ilp.Map.DownloadCompleteRunner.result
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineListener
 import com.mapbox.android.core.location.LocationEnginePriority
@@ -62,7 +61,6 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
     private lateinit var locationLayerPlugin: LocationLayerPlugin
     private lateinit var mDrawerLayout: DrawerLayout
     private lateinit var permissionManager: PermissionsManager
-    private var firestore: FirebaseFirestore? = null
 
     // shared preference variables
     private var downloadDate: String? = "" // Format: YYYY/MM/DD
@@ -72,6 +70,9 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
     private var markerPairs: MutableList<Pair<Coin, Marker?>> = mutableListOf()
     // each item in the list contains a coin with its different properties
     private var coinWallet : ArrayList<Coin> = arrayListOf()
+    private var coinBank : ArrayList<Coin> = arrayListOf()
+    private var gold: Double? = 0.0
+    private var depositCounter: Int? = 0
     // different from wallet: it stores coins which you collected (not traded)
     private var collectedCoins : ArrayList<String> = arrayListOf()
     // Json features of the downloaded file
@@ -125,9 +126,7 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
     }
 
     /**
-     * gets wallet data from firebase
-     * only draws coins after query is finished,
-     * so that drawing method knows which coins are already collected
+     * enables location and starts downloading map
      */
     override fun onMapReady(mapboxMap: MapboxMap?) {
         if (mapboxMap == null) {
@@ -139,29 +138,8 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
 
             enableLocation()
 
-            firestore = firestoreSetup()
-            val user = FirebaseAuth.getInstance().currentUser
-            val email = user?.email.toString()
-            val walletCollection = firestore?.collection(COLLECTION_KEY)
-                    ?.document(email)
-                    ?.collection(WALLET_KEY)
-
-            walletCollection?.get()
-                    ?.addOnSuccessListener { documents ->
-                        for (document in documents) {
-                            val data = document.data
-                            val coin = Coin(id = data["id"].toString(),
-                                    value = data["value"].toString().toFloat(),
-                                    currency = data["currency"].toString())
-                            coinWallet.add(coin)
-                            if (coin.traded == 0) {
-                                collectedCoins.add(coin.id)
-                            }
-                        }
-                        // Get the GeoJSON marker coordinates from the web
-                        downloadMap()
-                    }
-                    ?.addOnFailureListener { e -> Timber.e(e.message) }
+            // Get the GeoJSON marker coordinates from the web
+            downloadMap()
         }
     }
 
@@ -318,7 +296,7 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
         //get map data if download date is old
         if (today != downloadDate) {
             val task = DownloadFileTask(DownloadCompleteRunner)
-            lastJson = task.execute(getString(R.string.json_site)).get()
+            lastJson = task.execute(String.format(getString(R.string.json_site), today)).get()
         }
 
         // check if Json contains valid coin data (i.e. download was successful)
@@ -521,13 +499,24 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
         } else {
             Timber.d("locationLayerPlugin not initialized")
         }
-
         // Restore preferences
         val prefSettings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
 
         // use "" as the default value (this might be the first time the app is run)
-        downloadDate = prefSettings.getString("lastDownloadDate", "")
-        lastJson = prefSettings.getString("lastJson", "")
+        downloadDate = prefSettings.getString(DOWNLOAD_KEY, "")
+        lastJson = prefSettings.getString(JSON_KEY, "")
+        gold = prefSettings.getString(GOLD_KEY, "")?.toDoubleOrNull()
+        if (gold == null) {
+            gold = 0.0
+        }
+        depositCounter = prefSettings.getString(COUNTER_KEY, "0")?.toIntOrNull()
+        if (depositCounter == null) {
+            depositCounter = 0
+        }
+
+        coinWallet = prefsToCoinList(WALLET_KEY)
+        coinBank = prefsToCoinList(BANK_KEY)
+        collectedCoins = prefsToStringList(COLLECTED_KEY)
     }
 
     override fun onResume() {
@@ -537,10 +526,20 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
     override fun onPause() {
         super.onPause()
         mapView?.onPause()
+
+        listToPrefs(coinWallet, WALLET_KEY)
+        listToPrefs(collectedCoins, COLLECTED_KEY)
+        // All objects are from android.context.Context
+        val prefSettings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
+        // We need an Editor object to make preference changes
+        val editor = prefSettings.edit()
+        editor.putString(DOWNLOAD_KEY, downloadDate)
+        editor.putString(JSON_KEY, lastJson)
+        editor.apply()
     }
 
     /**
-     * saves values to firebase and shared preferences
+     * saves values to shared preferences
      */
     override fun onStop() {
         super.onStop()
@@ -551,27 +550,11 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
             Timber.d("locationLayerPlugin not initialized")
         }
         mapView?.onStop()
-
-        firestore = firestoreSetup()
-
-        val user = FirebaseAuth.getInstance().currentUser
-        val email = user?.email.toString()
-        val walletCollection = firestore?.collection(COLLECTION_KEY)
-                ?.document(email)
-                ?.collection(WALLET_KEY)
-
-        uploadCoins(walletCollection, coinWallet)
-
-        // All objects are from android.context.Context
-        val prefSettings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
-
-        // We need an Editor object to make preference changes
-        val editor = prefSettings.edit()
-        editor.putString("lastDownloadDate", downloadDate)
-        editor.putString("lastJson", lastJson)
-        editor.apply()
     }
 
+    /**
+     * is called at the end of the app's lifecycle, so we have to store everything onto firebase
+     */
     override fun onDestroy() {
         super.onDestroy()
         mapView?.onDestroy()
@@ -580,7 +563,42 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
         } else {
             Timber.d("locationLayerPlugin not initialized")
         }
+
+        // Restore preferences
+        val prefSettings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
+
+        // use "" as the default value (this might be the first time the app is run)
+        downloadDate = prefSettings.getString(DOWNLOAD_KEY, "")
+        lastJson = prefSettings.getString(JSON_KEY, "")
+        gold = prefSettings.getString(GOLD_KEY, "")?.toDoubleOrNull()
+        if (gold == null) {
+            gold = 0.0
+        }
+        depositCounter = prefSettings.getString(COUNTER_KEY, "0")?.toIntOrNull()
+        if (depositCounter == null) {
+            depositCounter = 0
+        }
+
+        coinWallet = prefsToCoinList(WALLET_KEY)
+        coinBank = prefsToCoinList(BANK_KEY)
+        collectedCoins = prefsToStringList(COLLECTED_KEY)
+
+        // uploads all information onto firestore,
+        // so that when app is started again, firestore is correct
+        uploadCoins(WALLET_KEY, coinWallet)
+        uploadCoins(BANK_KEY, coinBank)
+        uploadList(COLLECTED_KEY, collectedCoins)
+        val firestore = firestoreSetup()
+        val user = FirebaseAuth.getInstance().currentUser
+        val email = user?.email.toString()
+        val info = HashMap<String, Any>()
+        info[GOLD_KEY] = gold!!
+        info[COUNTER_KEY] = depositCounter!!
+        firestore?.collection(COLLECTION_KEY)
+                ?.document(email)
+                ?.set(info)
     }
+
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
         if (outState != null) {

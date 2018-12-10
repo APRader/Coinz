@@ -2,7 +2,7 @@
     <string name="app_name">Coinz</string>
     //access token for Mapbox
     <string name="access_token">pk.eyJ1IjoiYXByYWRlciIsImEiOiJjam1odmQ1a2QxcDluM3BvOWJkZ3BhM3NjIn0.DygeFTcbsvcL4sZq-tofDQ</string>
-    <string name="json_site">http://homepages.inf.ed.ac.uk/stg/coinz/$today/coinzmap.geojson</string>
+    <string name="json_site">http://homepages.inf.ed.ac.uk/stg/coinz/%1$s/coinzmap.geojson</string>
 
     <string name="wallet">Wallet</string>
     <string name="bank">Bank</string>
@@ -11,11 +11,22 @@
     <string name="logout">Log out</string>
     <string name="email">Email address</string>
 
+    <!-- Trading -->
+    <string name="get_recipient">Who do you want to send it to?</string>
+    <string name="self_trade_title">You can\'t trade coins with yourself</string>
+    <string name="self_trade_message">Try getting a friend.</string>
+    <string name="no_coins_title">No coins for you.</string>
+    <string name="no_coins_message">No one has sent you coins since the last time you checked :(.</string>
+    <string name="one_coin_title">One coin for you.</string>
+    <string name="one_coin_message">You received one coin.</string>
+    <string name="many_coins_title">You got coins!</string>
+    <string name="many_coins_message">You received %1$d coins."</string>
 
     <!-- Login -->
     <string name="login_start_text">Welcome to Coinz! In order to play, please log in or register a new account.</string>
     <string name="login_button">Log in/register</string>
     <string name="login_failed_message">Log in failed</string>
+    <string name="download">Downloading your data...</string>
 
     <!-- Network connection -->
     <string name="no_connection_title">No network connection</string>
@@ -37,7 +48,7 @@
     <string name="deposit_limit_message_0">You have reached the limit of 25 coins deposited today. You can deposit coins again tomorrow.</string>
     <string name="deposit_limit_message_many">You are trying to deposit %1$d coins that you collected yourself, but you have already deposited %2$d coins today.
         The limit is 25 collected coins per day, so please select at most %3$d to deposit.</string>
-    <string name="gold">Your GOLD: %1$d</string>
+    <string name="gold">Your GOLD: %1$.0f</string>
 
     <!-- Permissions -->
     <string name="no_location_permission_title">Location permission not granted</string>

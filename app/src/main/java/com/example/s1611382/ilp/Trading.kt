@@ -1,51 +1,40 @@
 package com.example.s1611382.ilp
 
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.os.Bundle
-import android.util.Log
+import android.support.v4.app.FragmentManager
+import android.support.v4.app.NavUtils
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.*
+import timber.log.Timber
 
 class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
-    private val preferencesFile = "MyPrefsFile" // for storing preferences
-    private val RC_SIGN_IN = 123
     private var firestore: FirebaseFirestore? = null
-    private var users: CollectionReference? = null
-    private var firestoreTrading: DocumentReference? = null
-    private lateinit var coinWallet: ArrayList<Coin>
+    private var coinWallet: ArrayList<Coin> = arrayListOf()
     private lateinit var tradeButton: Button
     private lateinit var receiveButton: Button
+    private var user: FirebaseUser? = null
+
+    private lateinit var fragmentManager: FragmentManager
     private val tradeSelection = "trade"
     private var recipient = ""
-
-    companion object {
-        private const val TAG = "Coinz"
-        private const val COLLECTION_KEY = "Users"
-        private const val TRADING_KEY = "Trading"
-        private const val WALLET_KEY = "Wallet"
-        private const val DOCUMENT_KEY = "Message"
-        private const val NAME_FIELD = "Name"
-        private const val COIN_FIELD = "Coin"
-        val COINLIST = "coinList"
-    }
 
     override fun onCreate(savedInstanceState: Bundle?   ) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.trading)
         setToolbar()
 
-        coinWallet = intent.extras.getParcelableArrayList(COIN_WALLET)
+        fragmentManager = supportFragmentManager
+        user = FirebaseAuth.getInstance().currentUser
 
-        firestore = FirebaseFirestore.getInstance()
-        // Use com.google.firebase.Timestamp objects instead of java.util.Date objects
-        val settings = FirebaseFirestoreSettings.Builder()
-                .setTimestampsInSnapshotsEnabled(true)
-                .build()
-        firestore?.firestoreSettings = settings
-        //realtimeUpdateListener()
+        coinWallet = intent?.extras?.getParcelableArrayList(COIN_WALLET)!!
+
+        firestore = firestoreSetup()
 
         tradeButton = findViewById(R.id.trade_button_id)
         receiveButton = findViewById(R.id.receive_button_id)
@@ -53,10 +42,16 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
         receiveButton.setOnClickListener{_ -> receiveCoins() }
     }
 
+    /**
+     * opens dialogue for user to type in recipient's email
+     * when user confirms, method chooseCoins is called
+     * when user cancels, dialogue is dismissed
+     */
+    @SuppressLint("InflateParams")
     private fun getRecipient() {
-        // opens dialogue for user to name recipient's email
         val builder = AlertDialog.Builder(this)
-        builder.setTitle("Who do you want to send it to?")
+        builder.setTitle(getString(R.string.get_recipient))
+        // taking root as null is ok for AlertDialog, as it does not expose root view
         val view = layoutInflater.inflate(R.layout.trade_dialog, null)
         val editText = view.findViewById(R.id.trade_edit_id) as EditText
         builder.setView(view)
@@ -65,35 +60,36 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
             val userInput = editText.text
             if (!userInput.isBlank()) {
                 recipient = userInput.toString()
-                val user = FirebaseAuth.getInstance().currentUser
                 val email = user?.email.toString()
                 if (email != recipient) {
                     chooseCoins()
                 } else {
-                    val builder = android.support.v7.app.AlertDialog.Builder(this)
-                    builder.setTitle("You can't trade coins with yourself")
-                    builder.setMessage("Try getting a friend")
-                    val dialog: android.support.v7.app.AlertDialog = builder.create()
-                    dialog.show()
+                    val negativeBuilder = android.support.v7.app.AlertDialog.Builder(this)
+                    negativeBuilder.setTitle(getString(R.string.self_trade_title))
+                    negativeBuilder.setMessage(getString(R.string.self_trade_message))
+                    val negativeDialog: android.support.v7.app.AlertDialog = negativeBuilder.create()
+                    negativeDialog.show()
                 }
 
             }
             dialog.dismiss()
         }
 
-        builder.setNegativeButton(android.R.string.cancel) {dialog, p1 ->
+        builder.setNegativeButton(android.R.string.cancel) {dialog, _ ->
             dialog.cancel()
         }
 
         builder.show()
     }
 
+    /**
+     * uses Firebase to send coins to another user
+     * Each document in the User collection of firestore represents a user
+     * In the user's trading collection, every document represents a coin the user got
+     * Thus, we add coins to the trading collection of the recipient's document
+     */
     private fun sendCoins(recipient: String?, sentCoins: ArrayList<Coin>?) {
         if (recipient != null) {
-            val user = FirebaseAuth.getInstance().currentUser
-            // Each document in the User collection of firestore represents a user
-            // In the user's trading collection, every document represents a coin the user got
-            // Thus, we add coins to the trading collection of the recipient's document
             if (user != null ) {
                 val collection = firestore?.collection(COLLECTION_KEY)
                         ?.document(recipient)
@@ -103,8 +99,8 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
                         // add coin to recipient's trading collection
                         collection
                                 ?.add(coin)
-                                ?.addOnSuccessListener { Log.d(TAG, "Sent coin $coin") }
-                                ?.addOnFailureListener { e -> Log.e(TAG, e.message) }
+                                ?.addOnSuccessListener { Timber.d("Traded coin $coin") }
+                                ?.addOnFailureListener { e -> Timber.e(e.message) }
 
                         // remove coin from sender's wallet
                         coinWallet.remove(coin)
@@ -113,15 +109,17 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
             }
         }
         // removes last fragment from stack (which is WalletFragment)
-        val fragmentManager = supportFragmentManager
         fragmentManager.popBackStack()
-        // add deposit button again, so user can deposit again
+        // re-add trade button, so user can trade again
         tradeButton.visibility = View.VISIBLE
     }
 
+    /**
+     * checks user's trading folder to see if someone has sent coins to them
+     * displays message with how many coins user received
+     */
     private fun receiveCoins() {
         // if the trade fragment is open we need to close it and make its button visible
-        val fragmentManager = supportFragmentManager
         fragmentManager.popBackStack()
         tradeButton.visibility = View.VISIBLE
 
@@ -138,26 +136,23 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
                 ?.addOnSuccessListener { documents ->
                     for (document in documents) {
                         val data = document.data
-                        //TODO: catch if they are not right type
                         // traded value in coin is set to 1
                         val coin = Coin(id = data["id"].toString(),
                                 value = data["value"].toString().toFloat(),
                                 currency = data["currency"].toString(),
                                 traded = 1)
                         document.reference.delete()
-                                .addOnSuccessListener { print("success") }
-                                .addOnFailureListener{ print(":(")}
                         coinWallet.add(coin)
                         counter++
                     }
                     val builder = android.support.v7.app.AlertDialog.Builder(this)
                     when (counter) {
-                        0 -> { builder.setTitle("No coins for you.")
-                            builder.setMessage("No one has sent you coins since the last time you checked :(.")}
-                        1 -> { builder.setTitle("One coin for you.")
-                            builder.setMessage("You received one coin.")}
-                        else -> { builder.setTitle("You got coins!")
-                            builder.setMessage("You received $counter coins.")}
+                        0 -> { builder.setTitle(getString(R.string.no_coins_title))
+                            builder.setMessage(getString(R.string.no_coins_message))}
+                        1 -> { builder.setTitle(getString(R.string.one_coin_title))
+                            builder.setMessage(getString(R.string.one_coin_message))}
+                        else -> { builder.setTitle(getString(R.string.many_coins_title))
+                            builder.setMessage(String.format(getString(R.string.many_coins_message), counter))}
                     }
                     val dialog: android.support.v7.app.AlertDialog = builder.create()
                     dialog.show()
@@ -166,26 +161,11 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
                     print(exception)
                 }
     }
-    //firestoreTrading?.set(newTrade)
-    //       ?.addOnSuccessListener { print("Trade sent!") }
-    //      ?.addOnFailureListener { e -> Log.e(TAG, e.message) }
 
-    /*
-    private fun realtimeUpdateListener() {
-        users?.addSnapshotListener { documentSnapshot, e ->
-            when {
-                e!= null -> Log.e(TAG, e.message)
-                documentSnapshot != null && documentSnapshot.exists() -> {
-                    with(documentSnapshot) {
-                        val incoming = "${data?.get(NAME_FIELD)}:" +
-                                "${data?.get(COIN_FIELD)}"
-                        print(incoming)
-                    }
-                }
-            }
-        }
-    }*/
 
+    /**
+     * uses SelectionFragment to let user choose coins to send
+     */
     private fun chooseCoins() {
         // hiding deposit button so user can't add more than one WalletFragment
         tradeButton.visibility = View.GONE
@@ -195,7 +175,7 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
         val fragmentTransaction = fragmentManager.beginTransaction()
         val fragment = SelectionFragment()
         val args = Bundle()
-        args.putParcelableArrayList(COINLIST, coinWallet)
+        args.putParcelableArrayList(COIN_LIST, coinWallet)
         args.putString(SELECTION_KEY, tradeSelection)
         args.putString(TEXT_KEY, "Send selected coins")
         fragment.arguments = args
@@ -205,56 +185,38 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
         fragmentTransaction.commit()
     }
 
+    /**
+     * gets called when user has confirmed which coins they want to send
+     */
     override fun onCoinsSelected(selectedCoins: ArrayList<Coin>?, selectionType: String?) {
         when (selectionType) {
             tradeSelection -> sendCoins(recipient, selectedCoins)
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-    }
-
     override fun onPause() {
         super.onPause()
-        firestore = FirebaseFirestore.getInstance()
-        // Use com.google.firebase.Timestamp objects instead of java.util.Date objects
-        val firebaseSettings = FirebaseFirestoreSettings.Builder()
-                .setTimestampsInSnapshotsEnabled(true)
-                .build()
-        firestore?.firestoreSettings = firebaseSettings
-
-        val user = FirebaseAuth.getInstance().currentUser
-        val email = user?.email.toString()
-
-        val walletCollection = firestore?.collection(COLLECTION_KEY)
-                ?.document(email)
-                ?.collection(WALLET_KEY)
-
-        // delete all coins in firebase,
-        walletCollection?.get()
-                ?.addOnSuccessListener { documents ->
-                    for (document in documents) {
-                        document.reference.delete()
-                                .addOnSuccessListener { print("success") }
-                                .addOnFailureListener{ print(":(")}
-                    }
-                    // add current coins into firebase
-                    for (coin in coinWallet) {
-                        walletCollection
-                                ?.add(coin)
-                                ?.addOnSuccessListener { Log.d(TAG, "Sent coin $coin") }
-                                ?.addOnFailureListener { e -> Log.e(TAG, e.message) }
-                    }
-                }
-                ?.addOnFailureListener {exception ->
-                    print(exception)
-                }
+        uploadCoins(WALLET_KEY, coinWallet)
     }
 
+    /**
+     * if back button is pressed while fragment is open,
+     * buttons will be shown and fragment closed
+     * if back button is pressed when no fragment is open,
+     * map will be opened using up navigation
+     */
     override fun onBackPressed() {
         super.onBackPressed()
         // when user presses back button, fragment will be closed, so we need to set button that launched fragment to visible
         tradeButton.visibility = View.VISIBLE
+
+        // because wallet can be changed, the map has to be redrawn
+        // back navigation would not call onMapReady again on the map activity
+        // therefore we call upNavigation instead of back navigation
+        if (fragmentManager.backStackEntryCount == 0) {
+            NavUtils.navigateUpFromSameTask(this)
+        }
+
+        super.onBackPressed()
     }
 }

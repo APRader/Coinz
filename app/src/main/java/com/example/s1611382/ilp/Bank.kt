@@ -8,8 +8,6 @@ import android.support.v7.app.AlertDialog
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -29,8 +27,6 @@ class Bank: BaseActivity(), SelectionFragment.OnCoinsSelected {
     // counts how many deposits have been made today
     private var depositCounter: Int? = 0
     private var counterDate: String? = ""
-
-    private var firestore: FirebaseFirestore? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -217,111 +213,49 @@ class Bank: BaseActivity(), SelectionFragment.OnCoinsSelected {
     override fun onStart() {
         super.onStart()
         val settings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
+        gold = settings.getString(GOLD_KEY, "")?.toDoubleOrNull()
+        if (gold == null) {
+            gold = 0.0
+        }
+        val goldView: TextView = findViewById(R.id.gold_id)
+        goldView.text = String.format(getString(R.string.gold), gold)
 
-        firestore = firestoreSetup()
+        depositCounter = settings.getString(COUNTER_KEY, "0")?.toIntOrNull()
+        if (depositCounter == null) {
+            depositCounter = 0
+        }
 
-        val user = FirebaseAuth.getInstance().currentUser
-        val email = user?.email.toString()
+        counterDate = settings.getString(COUNTER_DATE_KEY, "")
 
-        // GOLD and depositCounter are stored as fields in User's document in firestore
-        firestore?.collection(COLLECTION_KEY)
-                ?.document(email)
-                ?.get()
-                ?.addOnSuccessListener { document ->
-                    gold = document.data?.get("gold") as Double?
-                    depositCounter = document.data?.get("counter").toString().toInt()
-                    if (gold == null) {
-                        gold = 0.0
-                    }
-                    val goldView: TextView = findViewById(R.id.gold_id)
-                    goldView.text = String.format(getString(R.string.gold), gold)
-                    if (depositCounter == null) {
-                        depositCounter = 0
-                    }
-                }
-
-        counterDate = settings.getString("lastCounterDate", "")
-
-        val bankCollection = firestore?.collection(COLLECTION_KEY)
-                ?.document(email)
-                ?.collection(BANK_KEY)
-
-        bankCollection?.get()
-                ?.addOnSuccessListener { documents ->
-                    for (document in documents) {
-                        val data = document.data
-                        // traded value in coin is set to 1
-                        val coin = Coin(id = data["id"].toString(),
-                                value = data["value"].toString().toFloat(),
-                                currency = data["currency"].toString())
-                        coinBank.add(coin)
-                    }
-                }
-                ?.addOnFailureListener { exception ->
-                    print(exception)
-                }
+        coinBank = prefsToCoinList(BANK_KEY)
     }
 
-    override fun onStop() {
-        super.onStop()
 
-        firestore = firestoreSetup()
-
-        val user = FirebaseAuth.getInstance().currentUser
-        val email = user?.email.toString()
-
-        val bankCollection = firestore?.collection(COLLECTION_KEY)
-                ?.document(email)
-                ?.collection(BANK_KEY)
-
-        uploadCoins(bankCollection, coinBank)
-
-        val info = HashMap<String, Any>()
-        info["gold"] = gold!!
-        info["counter"] = depositCounter!!
-        firestore?.collection(COLLECTION_KEY)
-                ?.document(email)
-                ?.set(info)
+    /**
+     * all values that could have been changed are stored in shared preferences
+     */
+    override fun onPause() {
+        super.onPause()
 
         val settings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
         val editor = settings.edit()
-        editor.putString("lastCounterDate", counterDate)
+        editor.putString(GOLD_KEY, gold.toString())
+        editor.putString(COUNTER_KEY, depositCounter.toString())
+        editor.putString(COUNTER_DATE_KEY, counterDate)
         editor.apply()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        firestore = firestoreSetup()
-
-        val user = FirebaseAuth.getInstance().currentUser
-        val email = user?.email.toString()
-
-        val walletCollection = firestore?.collection(COLLECTION_KEY)
-                ?.document(email)
-                ?.collection(WALLET_KEY)
-
-        uploadCoins(walletCollection, coinWallet)
+        listToPrefs(coinBank, BANK_KEY)
+        listToPrefs(coinWallet, WALLET_KEY)
     }
 
     /**
-     * if back button is pressed while fragment is open,
-     * buttons will be shown and fragment closed
-     * if back button is pressed when no fragment is open,
-     * map will be opened using up navigation
+     * when user presses back button, fragment will be closed,
+     * so we need to set button that launched fragment to visible
      */
     override fun onBackPressed() {
-        // when user presses back button, fragment will be closed, so we need to set button that launched fragment to visible
         val depositButton: Button = findViewById(R.id.deposit_button_id)
         val convertButton: Button = findViewById(R.id.conversion_button_id)
         depositButton.visibility = View.VISIBLE
         convertButton.visibility = View.VISIBLE
-
-        // because wallet can be changed, the map has to be redrawn
-        // back navigation would not call onMapReady again on the map activity
-        // therefore we call upNavigation instead of back navigation
-        if (fragmentManager.backStackEntryCount == 0) {
-            NavUtils.navigateUpFromSameTask(this)
-        }
 
         super.onBackPressed()
     }
