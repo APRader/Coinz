@@ -2,8 +2,6 @@ package com.example.s1611382.ilp;
 
 
 import android.Manifest;
-import android.content.Context;
-import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.ViewInteraction;
 import android.support.test.espresso.assertion.ViewAssertions;
 import android.support.test.filters.LargeTest;
@@ -36,13 +34,17 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.is;
 
 /**
- * Tests whether app stays logs in successfully using a valid email and password
+ * Tests whether app stays logs in successfully
+ * using email and password of a user without a document.
+ * The download has to handle non-existing documents correctly.
  */
+
 @LargeTest
 @RunWith(AndroidJUnit4.class)
-public class LoginSuccessfulTest {
+public class EmptyUserTest {
     private String password;
     private String email;
+
 
     @Rule @JvmField
     public GrantPermissionRule grantPermissionRule = GrantPermissionRule.grant(Manifest.permission.ACCESS_FINE_LOCATION);
@@ -53,7 +55,7 @@ public class LoginSuccessfulTest {
         public void beforeActivityLaunched() {
             TestConditions tc = new TestConditions();
             tc.signOutUser();
-            email = tc.testUser();
+            email = tc.emptyUser();
             password = tc.getPassword();
         }
     };

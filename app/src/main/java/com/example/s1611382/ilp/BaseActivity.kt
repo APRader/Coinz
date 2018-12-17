@@ -11,7 +11,6 @@ import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.QueryDocumentSnapshot
 import com.google.firebase.firestore.SetOptions
 import com.google.gson.Gson
-import timber.log.Timber
 import java.lang.reflect.Type
 
 abstract class BaseActivity : AppCompatActivity() {
@@ -71,9 +70,11 @@ abstract class BaseActivity : AppCompatActivity() {
 
         val gson = Gson()
         val json = gson.toJson(coinList)
+        val data = HashMap<String, Any>()
+        data[key] = json
         firestore?.collection(COLLECTION_KEY)
                 ?.document(email)
-                ?.update(key, json)
+                ?.set(data, SetOptions.merge())
     }
 
     fun uploadList(key: String, list: ArrayList<String>) {
@@ -125,13 +126,13 @@ abstract class BaseActivity : AppCompatActivity() {
     }
 
     /**
-     * turns a firestore document into a coin
+     * turns a firestore document into a coin that is traded
      */
-    fun documentToCoin(document: QueryDocumentSnapshot): Coin {
+    fun documentToTradedCoin(document: QueryDocumentSnapshot): Coin {
         val data = document.data
         return Coin(id = data["id"].toString(),
                 value = data["value"].toString().toFloat(),
-                currency = data["currency"].toString())
+                currency = data["currency"].toString(), traded = 1)
     }
 
     /**

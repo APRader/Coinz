@@ -3,27 +3,18 @@ package com.example.s1611382.ilp
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.Toast
 import com.firebase.ui.auth.AuthUI
-import com.google.common.reflect.TypeToken
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QueryDocumentSnapshot
-import com.google.gson.Gson
 import timber.log.Timber
-import java.lang.reflect.Type
 
 class Login : BaseActivity() {
     private var firestore: FirebaseFirestore? = null
-    private var coinWallet : ArrayList<Coin> = arrayListOf()
-    private var collectedCoins : ArrayList<String> = arrayListOf()
-    private var coinBank : ArrayList<Coin> = arrayListOf()
     private var user: FirebaseUser? = null
     private lateinit var email: String
     private lateinit var loginButton: Button
@@ -69,7 +60,7 @@ class Login : BaseActivity() {
                 ?.get()
                 ?.addOnSuccessListener { document ->
                     val gold = document.data?.get(GOLD_KEY) as Double?
-                    val depositCounter: Int? = document.data?.get(COUNTER_KEY).toString().toInt()
+                    val depositCounter = document.data?.get(COUNTER_KEY)
                     var walletString = document.data?.get(WALLET_KEY).toString()
                     var bankString = document.data?.get(BANK_KEY).toString()
                     var collectedString = document.data?.get(COLLECTED_KEY).toString()
@@ -91,8 +82,6 @@ class Login : BaseActivity() {
                 }
                 ?.addOnFailureListener {e ->
                     Timber.e(e.message)
-                    // document doesn't exist
-                    openMap()
                 }
     }
 

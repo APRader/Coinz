@@ -121,13 +121,6 @@ class Bank: BaseActivity(), SelectionFragment.OnCoinsSelected {
      * otherwise message is shown
      */
     private fun depositCoins(depositedCoins: ArrayList<Coin>?) {
-        val sdf = SimpleDateFormat("yyyy/MM/dd", Locale.UK)
-        val today = sdf.format(Date())
-        // if it's a new day, reset the deposit counter
-        if (today != counterDate) {
-            counterDate = today
-            depositCounter = 0
-        }
         // stores the amount of coins that were not traded, as these do not contribute to the max deposit rule
         var untradedCoins = 0
         if (depositedCoins != null) {
@@ -226,6 +219,14 @@ class Bank: BaseActivity(), SelectionFragment.OnCoinsSelected {
         }
 
         counterDate = settings.getString(COUNTER_DATE_KEY, "")
+
+        val sdf = SimpleDateFormat("yyyy/MM/dd", Locale.UK)
+        val today = sdf.format(Date())
+        // if it's a new day, reset the deposit counter
+        if (today != counterDate) {
+            counterDate = today
+            depositCounter = 0
+        }
 
         coinBank = prefsToCoinList(BANK_KEY)
     }

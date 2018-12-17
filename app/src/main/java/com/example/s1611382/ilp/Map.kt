@@ -18,6 +18,7 @@ import android.view.View
 import com.example.s1611382.ilp.Map.DownloadCompleteRunner.result
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.SetOptions
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineListener
 import com.mapbox.android.core.location.LocationEnginePriority
@@ -99,18 +100,10 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
             // close drawer when item is tapped
             mDrawerLayout.closeDrawers()
 
-            if (menuItem.itemId == R.id.nav_wallet) {
-                openWallet()
-            }
-            if (menuItem.itemId == R.id.nav_bank) {
-                openBank()
-            }
-            if (menuItem.itemId == R.id.nav_trading) {
-                openTrading()
-            }
-            if (menuItem.itemId == R.id.nav_logout) {
-                logout()
-            }
+            if (menuItem.itemId == R.id.nav_wallet) { openWallet() }
+            if (menuItem.itemId == R.id.nav_bank) { openBank() }
+            if (menuItem.itemId == R.id.nav_trading) { openTrading() }
+            if (menuItem.itemId == R.id.nav_logout) { logout() }
             true
         }
 
@@ -205,6 +198,10 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
     /**
      * open the other activities from the navigation drawer
      */
+    private fun menuSelector(menuItem: MenuItem) {
+
+    }
+
     private fun openWallet() {
         val walletIntent = Intent(this, Wallet::class.java)
         walletIntent.putExtra(COIN_WALLET, coinWallet)
@@ -293,8 +290,10 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
         // update download date as a string
         val sdf = SimpleDateFormat("yyyy/MM/dd", Locale.UK)
         val today = sdf.format(Date())
-        //get map data if download date is old
+        // get map data if download date is old
+        // also reset collectedCoins list, as user couldn't have collected any coins today
         if (today != downloadDate) {
+            collectedCoins = arrayListOf()
             val task = DownloadFileTask(DownloadCompleteRunner)
             lastJson = task.execute(String.format(getString(R.string.json_site), today)).get()
         }
@@ -591,12 +590,11 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
         val firestore = firestoreSetup()
         val user = FirebaseAuth.getInstance().currentUser
         val email = user?.email.toString()
-        val info = HashMap<String, Any>()
-        info[GOLD_KEY] = gold!!
-        info[COUNTER_KEY] = depositCounter!!
-        firestore?.collection(COLLECTION_KEY)
-                ?.document(email)
-                ?.set(info)
+        val document = firestore?.collection(COLLECTION_KEY)?.document(email)
+        val data = HashMap<String, Any>()
+        data[GOLD_KEY] = gold!!
+        data[COUNTER_KEY] = depositCounter!!
+        document?.set(data, SetOptions.merge())
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {

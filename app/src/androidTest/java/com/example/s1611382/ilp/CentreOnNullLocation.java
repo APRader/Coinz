@@ -2,8 +2,6 @@ package com.example.s1611382.ilp;
 
 
 import android.Manifest;
-import android.content.Context;
-import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.ViewInteraction;
 import android.support.test.espresso.assertion.ViewAssertions;
 import android.support.test.filters.LargeTest;
@@ -35,14 +33,15 @@ import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.is;
 
+
 /**
- * Tests whether app stays logs in successfully using a valid email and password
+ * Tests that the app doesn't crash when clicking on the location centering fab without a location
  */
 @LargeTest
 @RunWith(AndroidJUnit4.class)
-public class LoginSuccessfulTest {
-    private String password;
+public class CentreOnNullLocation {
     private String email;
+    private String password;
 
     @Rule @JvmField
     public GrantPermissionRule grantPermissionRule = GrantPermissionRule.grant(Manifest.permission.ACCESS_FINE_LOCATION);
@@ -57,10 +56,8 @@ public class LoginSuccessfulTest {
             password = tc.getPassword();
         }
     };
-
     @Test
-    public void loginSuccessfulTest() {
-
+    public void centreOnNullLocation() {
         ViewInteraction appCompatButton = onView(
                 allOf(withId(R.id.login_button_id), withText("Log in/register"),
                         childAtPosition(
@@ -114,7 +111,25 @@ public class LoginSuccessfulTest {
             e.printStackTrace();
         }
 
+        ViewInteraction floatingActionButton = onView(
+                allOf(withId(R.id.fab),
+                        childAtPosition(
+                                childAtPosition(
+                                        withId(R.id.drawer_layout),
+                                        0),
+                                1),
+                        isDisplayed()));
+        floatingActionButton.perform(click());
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
         onView(withId(R.id.mapView)).check(ViewAssertions.matches(isDisplayed()));
+
     }
 
     private static Matcher<View> childAtPosition(

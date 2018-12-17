@@ -2,9 +2,9 @@ package com.example.s1611382.ilp
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.content.Context
 import android.os.Bundle
 import android.support.v4.app.FragmentManager
-import android.support.v4.app.NavUtils
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -12,6 +12,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.*
 import timber.log.Timber
+import java.text.SimpleDateFormat
+import java.util.*
 
 class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
     private var firestore: FirebaseFirestore? = null
@@ -23,6 +25,10 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
     private lateinit var fragmentManager: FragmentManager
     private val tradeSelection = "trade"
     private var recipient = ""
+
+    // counts how many deposits have been made today
+    private var depositCounter: Int? = 0
+    private var counterDate: String? = ""
 
     override fun onCreate(savedInstanceState: Bundle?   ) {
         super.onCreate(savedInstanceState)
@@ -49,37 +55,45 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
      */
     @SuppressLint("InflateParams")
     private fun getRecipient() {
-        val builder = AlertDialog.Builder(this)
-        builder.setTitle(getString(R.string.get_recipient))
-        // taking root as null is ok for AlertDialog, as it does not expose root view
-        val view = layoutInflater.inflate(R.layout.trade_dialog, null)
-        val editText = view.findViewById(R.id.trade_edit_id) as EditText
-        builder.setView(view)
+        // user can only trade spare change, i.e. they have deposited 25 coins
+        if (depositCounter!! >= 25) {
+            val builder = AlertDialog.Builder(this)
+            builder.setTitle(getString(R.string.get_recipient))
+            // taking root as null is ok for AlertDialog, as it does not expose root view
+            val view = layoutInflater.inflate(R.layout.trade_dialog, null)
+            val editText = view.findViewById(R.id.trade_edit_id) as EditText
+            builder.setView(view)
 
-        builder.setPositiveButton(android.R.string.ok) { dialog, _ ->
-            val userInput = editText.text
-            if (!userInput.isBlank()) {
-                recipient = userInput.toString()
-                val email = user?.email.toString()
-                if (email != recipient) {
-                    chooseCoins()
-                } else {
-                    val negativeBuilder = android.support.v7.app.AlertDialog.Builder(this)
-                    negativeBuilder.setTitle(getString(R.string.self_trade_title))
-                    negativeBuilder.setMessage(getString(R.string.self_trade_message))
-                    val negativeDialog: android.support.v7.app.AlertDialog = negativeBuilder.create()
-                    negativeDialog.show()
+            builder.setPositiveButton(android.R.string.ok) { dialog, _ ->
+                val userInput = editText.text
+                if (!userInput.isBlank()) {
+                    recipient = userInput.toString()
+                    val email = user?.email.toString()
+                    if (email != recipient) {
+                        chooseCoins()
+                    } else {
+                        val negativeBuilder = android.support.v7.app.AlertDialog.Builder(this)
+                        negativeBuilder.setTitle(getString(R.string.self_trade_title))
+                        negativeBuilder.setMessage(getString(R.string.self_trade_message))
+                        val negativeDialog: android.support.v7.app.AlertDialog = negativeBuilder.create()
+                        negativeDialog.show()
+                    }
+
                 }
-
+                dialog.dismiss()
             }
-            dialog.dismiss()
-        }
 
-        builder.setNegativeButton(android.R.string.cancel) {dialog, _ ->
-            dialog.cancel()
-        }
+            builder.setNegativeButton(android.R.string.cancel) { dialog, _ ->
+                dialog.cancel()
+            }
 
-        builder.show()
+            builder.show()
+        } else {
+            val builder = AlertDialog.Builder(this)
+            builder.setTitle(getString(R.string.spare_change_title))
+            builder.setMessage(getString(R.string.spare_change_message))
+            builder.show()
+        }
     }
 
     /**
@@ -135,12 +149,7 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
         collection?.get()
                 ?.addOnSuccessListener { documents ->
                     for (document in documents) {
-                        val data = document.data
-                        // traded value in coin is set to 1
-                        val coin = Coin(id = data["id"].toString(),
-                                value = data["value"].toString().toFloat(),
-                                currency = data["currency"].toString(),
-                                traded = 1)
+                        val coin = documentToTradedCoin(document)
                         document.reference.delete()
                         coinWallet.add(coin)
                         counter++
@@ -194,9 +203,35 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        val settings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
+        depositCounter = settings.getString(COUNTER_KEY, "0")?.toIntOrNull()
+        if (depositCounter == null) {
+            depositCounter = 0
+        }
+
+        counterDate = settings.getString(COUNTER_DATE_KEY, "")
+
+        val sdf = SimpleDateFormat("yyyy/MM/dd", Locale.UK)
+        val today = sdf.format(Date())
+        // if it's a new day, reset the deposit counter
+        if (today != counterDate) {
+            counterDate = today
+            depositCounter = 0
+        }
+    }
+
     override fun onPause() {
         super.onPause()
-        uploadCoins(WALLET_KEY, coinWallet)
+
+        listToPrefs(coinWallet, WALLET_KEY)
+
+        val settings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
+        val editor = settings.edit()
+        editor.putString(COUNTER_KEY, depositCounter.toString())
+        editor.putString(COUNTER_DATE_KEY, counterDate)
+        editor.apply()
     }
 
     /**
@@ -209,14 +244,5 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
         super.onBackPressed()
         // when user presses back button, fragment will be closed, so we need to set button that launched fragment to visible
         tradeButton.visibility = View.VISIBLE
-
-        // because wallet can be changed, the map has to be redrawn
-        // back navigation would not call onMapReady again on the map activity
-        // therefore we call upNavigation instead of back navigation
-        if (fragmentManager.backStackEntryCount == 0) {
-            NavUtils.navigateUpFromSameTask(this)
-        }
-
-        super.onBackPressed()
     }
 }

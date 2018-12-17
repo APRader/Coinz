@@ -20,7 +20,9 @@
     <string name="one_coin_title">One coin for you.</string>
     <string name="one_coin_message">You received one coin.</string>
     <string name="many_coins_title">You got coins!</string>
-    <string name="many_coins_message">You received %1$d coins."</string>
+    <string name="many_coins_message">You received %1$d coins.</string>
+    <string name="spare_change_title">You can only trade spare change</string>
+    <string name="spare_change_message">Spare change are coins that you cannot deposit anymore. Please deposit 25 coins so you can trade.</string>
 
     <!-- Login -->
     <string name="login_start_text">Welcome to Coinz! In order to play, please log in or register a new account.</string>

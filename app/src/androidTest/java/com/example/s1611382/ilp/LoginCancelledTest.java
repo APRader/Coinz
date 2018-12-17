@@ -1,11 +1,13 @@
 package com.example.s1611382.ilp;
 
 
+import android.Manifest;
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.ViewInteraction;
 import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
+import android.support.test.rule.GrantPermissionRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +20,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import kotlin.jvm.JvmField;
+
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.Espresso.pressBack;
 import static android.support.test.espresso.action.ViewActions.click;
@@ -27,6 +31,10 @@ import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 
+
+/**
+ * Tests whether app stays on login screen if login failed
+ */
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class LoginCancelledTest {
