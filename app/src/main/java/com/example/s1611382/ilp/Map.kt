@@ -292,7 +292,7 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
         val today = sdf.format(Date())
         // get map data if download date is old
         // also reset collectedCoins list, as user couldn't have collected any coins today
-        if (today != downloadDate) {
+        if (today != downloadDate || !lastJson!!.startsWith("\n{\n")) {
             collectedCoins = arrayListOf()
             val task = DownloadFileTask(DownloadCompleteRunner)
             lastJson = task.execute(String.format(getString(R.string.json_site), today)).get()
@@ -594,6 +594,7 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
         val data = HashMap<String, Any>()
         data[GOLD_KEY] = gold!!
         data[COUNTER_KEY] = depositCounter!!
+        data[DOWNLOAD_KEY] = downloadDate!!
         document?.set(data, SetOptions.merge())
     }
 
