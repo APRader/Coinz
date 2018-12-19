@@ -1,14 +1,16 @@
 package com.example.s1611382.ilp
 
-import android.support.v7.app.AppCompatActivity
+import android.content.Context
 import android.os.Bundle
 import android.view.MenuItem
+import android.widget.TextView
 
 class VendingMachine : BaseActivity() {
+    private var gold: Double? = 0.0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_vending_machine)
+        setContentView(R.layout.vending_machine)
         setToolbar()
     }
 
@@ -19,5 +21,16 @@ class VendingMachine : BaseActivity() {
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         onBackPressed()
         return true
+    }
+
+    override fun onStart() {
+        super.onStart()
+        val settings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
+        gold = settings.getString(GOLD_KEY, "")?.toDoubleOrNull()
+        if (gold == null) {
+            gold = 0.0
+        }
+        val goldView: TextView = findViewById(R.id.gold_id)
+        goldView.text = String.format(getString(R.string.gold), gold)
     }
 }

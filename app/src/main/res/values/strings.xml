@@ -65,6 +65,7 @@
     <string name="attach_money">attach money</string>
 
     <!-- Vending machine -->
+    <string name="get_collectible">Get a collectible for 20.000 GOLD ^.^!</string>
 
 
 </resources>

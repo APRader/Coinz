@@ -23,7 +23,7 @@
                                 <PersistentState>
                                   <option name="values">
                                     <map>
-                                      <entry key="url" value="jar:file:/opt/android-studio/3.14/plugins/android/lib/android.jar!/images/material_design_icons/action/ic_highlight_off_black_24dp.xml" />
+                                      <entry key="url" value="jar:file:/opt/android-studio/3.14/plugins/android/lib/android.jar!/images/material_design_icons/editor/ic_merge_type_black_24dp.xml" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -33,10 +33,9 @@
                         </option>
                         <option name="values">
                           <map>
-                            <entry key="color" value="ffffff" />
+                            <entry key="color" value="d79313" />
                             <entry key="height" value="48" />
-                            <entry key="opacityPercent" value="50" />
-                            <entry key="outputName" value="highlight_off_big" />
+                            <entry key="outputName" value="collectible30_merge_type" />
                             <entry key="overrideSize" value="true" />
                             <entry key="sourceFile" value="$USER_HOME$/Documents/Informatics Large Practical/coin_DOLR.svg" />
                             <entry key="width" value="48" />
