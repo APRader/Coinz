@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.NavUtils
 import android.support.v7.app.AlertDialog
+import android.view.MenuItem
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
@@ -18,7 +19,6 @@ class Bank: BaseActivity(), SelectionFragment.OnCoinsSelected {
     private lateinit var rates: HashMap<String, Float>
     private var coinWallet: ArrayList<Coin> = arrayListOf()
     private var coinBank : ArrayList<Coin> = arrayListOf()
-
 
     private lateinit var depositButton: Button
     private lateinit var conversionButton: Button
@@ -49,7 +49,7 @@ class Bank: BaseActivity(), SelectionFragment.OnCoinsSelected {
 
         ratesView.text = ratesText
 
-        depositButton= findViewById(R.id.deposit_button_id)
+        depositButton = findViewById(R.id.deposit_button_id)
         conversionButton = findViewById(R.id.conversion_button_id)
         fragmentManager = supportFragmentManager
 
@@ -246,6 +246,15 @@ class Bank: BaseActivity(), SelectionFragment.OnCoinsSelected {
         editor.apply()
         listToPrefs(coinBank, BANK_KEY)
         listToPrefs(coinWallet, WALLET_KEY)
+    }
+
+    /**
+     * override up navigation to behave like back navigation
+     * This prevents map from being drawn again.
+     */
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        onBackPressed()
+        return true
     }
 
     /**

@@ -20,7 +20,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Map" />
+        <activity
+            android:name=".Map"
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".Wallet"
             android:label="@string/wallet"
@@ -33,7 +35,6 @@
             android:name=".Trading"
             android:label="@string/trading"
             android:parentActivityName=".Map" />
-        <activity android:name=".BaseActivity"></activity>
     </application>
 
 </manifest>

@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory
 import android.location.Location
 import android.os.AsyncTask
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.support.design.widget.NavigationView
 import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
@@ -15,9 +16,13 @@ import android.support.v7.app.AlertDialog
 import android.support.v7.widget.Toolbar
 import android.view.MenuItem
 import android.view.View
+import android.widget.Button
+import android.widget.TextView
 import com.example.s1611382.ilp.Map.DownloadCompleteRunner.result
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineListener
@@ -74,14 +79,25 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
     private var coinBank : ArrayList<Coin> = arrayListOf()
     private var gold: Double? = 0.0
     private var depositCounter: Int? = 0
+    private var counterDate: String? = ""
     // different from wallet: it stores coins which you collected (not traded)
     private var collectedCoins : ArrayList<String> = arrayListOf()
     // Json features of the downloaded file
     private lateinit var features: List<Feature>
     // exchange rates of the day
     private var rates: HashMap<String, Float> = hashMapOf()
-    //stores current location at all times
+    // stores current location at all times
     private lateinit var originLocation: Location
+
+    // for timer
+    private var timerStarted = false
+    private lateinit var countDownTimer: CountDownTimer
+
+    private var firestore: FirebaseFirestore? = null
+    private var firebaseUser: FirebaseUser? = null
+    private var firebaseEmail: String = ""
+
+    private lateinit var timerButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -94,6 +110,10 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
         // this makes map variable usable in the rest of the class
         mapView?.getMapAsync(this)
 
+        firestore = firestoreSetup()
+        firebaseUser = FirebaseAuth.getInstance().currentUser
+        firebaseEmail = firebaseUser?.email.toString()
+
         mDrawerLayout = findViewById(R.id.drawer_layout)
         val navigationView: NavigationView = findViewById(R.id.nav_view)
         navigationView.setNavigationItemSelectedListener { menuItem ->
@@ -104,9 +124,14 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
             if (menuItem.itemId == R.id.nav_bank) { openBank() }
             if (menuItem.itemId == R.id.nav_trading) { openTrading() }
             if (menuItem.itemId == R.id.nav_logout) { logout() }
-            true
+
+            false
         }
 
+        timerButton = findViewById(R.id.timer_button_id)
+        timerButton.setOnClickListener { startTimer() }
+
+        // centre on current location fab
         val fab: View = findViewById(R.id.fab)
         fab.setOnClickListener {
             if (::originLocation.isInitialized) {
@@ -152,7 +177,7 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
 
 
     /**
-     * functions for Mapbox to get user@s location
+     * functions for Mapbox to get user's location
      */
     @SuppressLint("MissingPermission")
     private fun initializeLocationEngine() {
@@ -193,13 +218,6 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
             map?.animateCamera(CameraUpdateFactory.newLatLngZoom(
                     LatLng(location.latitude, location.longitude), 15.5))
         //}
-    }
-
-    /**
-     * open the other activities from the navigation drawer
-     */
-    private fun menuSelector(menuItem: MenuItem) {
-
     }
 
     private fun openWallet() {
@@ -349,6 +367,30 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
         } else {
             Timber.d("features is empty")
         }
+    }
+
+    /**
+     * starts a countdown in the upper right corner
+     * informing player for how much longer they can collect coins
+     */
+    private fun startTimer() {
+        timerButton.visibility = View.GONE
+        timerStarted = true
+        val timerView: TextView = findViewById(R.id.timer_id)
+
+        countDownTimer = object: CountDownTimer(TIMER, INTERVAL) {
+            override fun onTick(millisUntilFinished: Long) {
+                val timeLeft = millisUntilFinished/1000
+                // format as m:ss
+                timerView.text = String.format("%d:%02d", timeLeft/60, timeLeft%60)
+            }
+
+            override fun onFinish() {
+                timerView.text = ""
+            }
+        }
+
+        countDownTimer.start()
     }
 
     /**
@@ -513,6 +555,24 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
             depositCounter = 0
         }
 
+        counterDate = prefSettings.getString(COUNTER_DATE_KEY, "")
+        val timerPref = prefSettings.getString(TIMER_KEY, "")
+        timerStarted = timerPref?.toBoolean() ?: false
+
+        val sdf = SimpleDateFormat("yyyy/MM/dd", Locale.UK)
+        val today = sdf.format(Date())
+        // if it's a new day, reset the timer
+        if (today != counterDate) {
+            counterDate = today
+            timerStarted = false
+        }
+
+        if (timerStarted) {
+            timerButton.visibility = View.GONE
+        } else {
+            timerButton.visibility = View.VISIBLE
+        }
+
         coinWallet = prefsToCoinList(WALLET_KEY)
         coinBank = prefsToCoinList(BANK_KEY)
         collectedCoins = prefsToStringList(COLLECTED_KEY)
@@ -587,14 +647,12 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
         uploadCoins(WALLET_KEY, coinWallet)
         uploadCoins(BANK_KEY, coinBank)
         uploadList(COLLECTED_KEY, collectedCoins)
-        val firestore = firestoreSetup()
-        val user = FirebaseAuth.getInstance().currentUser
-        val email = user?.email.toString()
-        val document = firestore?.collection(COLLECTION_KEY)?.document(email)
+        val document = firestore?.collection(COLLECTION_KEY)?.document(firebaseEmail)
         val data = HashMap<String, Any>()
         data[GOLD_KEY] = gold!!
         data[COUNTER_KEY] = depositCounter!!
         data[DOWNLOAD_KEY] = downloadDate!!
+        data[TIMER_KEY] = timerStarted
         document?.set(data, SetOptions.merge())
     }
 

@@ -62,6 +62,7 @@ class Login : BaseActivity() {
                     val gold = document.data?.get(GOLD_KEY) as Double?
                     val depositCounter = document.data?.get(COUNTER_KEY)
                     val downloadDate = document.data?.get(DOWNLOAD_KEY)
+                    val timerStarted = document.data?.get(TIMER_KEY)
                     var walletString = document.data?.get(WALLET_KEY).toString()
                     var bankString = document.data?.get(BANK_KEY).toString()
                     var collectedString = document.data?.get(COLLECTED_KEY).toString()
@@ -75,6 +76,7 @@ class Login : BaseActivity() {
                     editor.putString(GOLD_KEY, gold.toString())
                     editor.putString(COUNTER_KEY, depositCounter.toString())
                     editor.putString(DOWNLOAD_KEY, downloadDate.toString())
+                    editor.putString(TIMER_KEY, timerStarted.toString())
                     editor.putString(WALLET_KEY, walletString)
                     editor.putString(BANK_KEY, bankString)
                     editor.putString(COLLECTED_KEY, collectedString)

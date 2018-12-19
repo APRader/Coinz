@@ -4,6 +4,7 @@ import android.content.Context
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.app.ActionBar
 import android.support.v7.widget.Toolbar
+import android.view.MenuItem
 import com.google.common.reflect.TypeToken
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -29,6 +30,7 @@ abstract class BaseActivity : AppCompatActivity() {
         const val GOLD_KEY = "Gold"
         const val COUNTER_KEY = "DepositCounter"
         const val COUNTER_DATE_KEY = "CounterDate"
+        const val TIMER_KEY = "TimerStarted"
         const val PREF_FILE = "MyPrefsFile"
         const val COIN_LIST = "coinList"
         const val SELECTION_KEY = "selectionKey"
@@ -38,6 +40,9 @@ abstract class BaseActivity : AppCompatActivity() {
         const val CONVERSION_SELECTION = "conversion"
         // user can deposit at most 25 collected coins per day
         const val DEPOSIT_LIMIT = 25
+        // how many milliseconds the timer lasts
+        const val TIMER: Long = 600000
+        const val INTERVAL: Long = 1000
     }
 
     open fun setToolbar() {
@@ -77,6 +82,9 @@ abstract class BaseActivity : AppCompatActivity() {
                 ?.set(data, SetOptions.merge())
     }
 
+    /**
+     * update Firestore with contents of local list of strings
+     */
     fun uploadList(key: String, list: ArrayList<String>) {
         val firestore = firestoreSetup()
         val user = FirebaseAuth.getInstance().currentUser

@@ -6,9 +6,10 @@ import android.os.Parcelable
 // it's Parcelable so we can pass it to different activities
 data class Coin(val id: String, val value: Float, val currency: String, val traded: Int = 0) : Parcelable {
     constructor(parcel: Parcel) : this(
-            parcel.readString(),
+            // if null, return empty string
+            parcel.readString() ?: "",
             parcel.readFloat(),
-            parcel.readString(),
+            parcel.readString() ?: "",
             parcel.readInt())
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {

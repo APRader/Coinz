@@ -5,6 +5,7 @@ import android.app.AlertDialog
 import android.content.Context
 import android.os.Bundle
 import android.support.v4.app.FragmentManager
+import android.view.MenuItem
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -171,7 +172,6 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
                 }
     }
 
-
     /**
      * uses SelectionFragment to let user choose coins to send
      */
@@ -203,6 +203,9 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
         }
     }
 
+    /**
+     * gets depositCounter and counterDate from shared preferences
+     */
     override fun onStart() {
         super.onStart()
         val settings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
@@ -222,6 +225,9 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
         }
     }
 
+    /**
+     * saves depositCounter and counterDate in shared preferences
+     */
     override fun onPause() {
         super.onPause()
 
@@ -235,14 +241,19 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
     }
 
     /**
-     * if back button is pressed while fragment is open,
-     * buttons will be shown and fragment closed
-     * if back button is pressed when no fragment is open,
-     * map will be opened using up navigation
+     * override up navigation to behave like back navigation
+     * This prevents map from being drawn again.
      */
-    override fun onBackPressed() {
-        super.onBackPressed()
-        // when user presses back button, fragment will be closed, so we need to set button that launched fragment to visible
-        tradeButton.visibility = View.VISIBLE
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        onBackPressed()
+        return true
+    }
+
+    /**
+     *  when user presses back button, fragment will be closed,
+     *  so we need to set button that launched fragment to visible
+     */
+    override fun onBackPressed() { super.onBackPressed()
+       tradeButton.visibility = View.VISIBLE
     }
 }

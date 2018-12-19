@@ -17,7 +17,8 @@ import android.widget.*
  * it returns the list items the user picked,
  * as well as the selectionType string given to the fragment
  */
-class SelectionFragment : ListFragment() {
+class SelectionFragment :
+        ListFragment() {
     private var coinList: ArrayList<Coin>? = arrayListOf()
     private var selectedCoins: ArrayList<Coin>? = arrayListOf()
     private var selectionType: String? = ""
@@ -66,7 +67,7 @@ class SelectionFragment : ListFragment() {
 
     override fun onAttach(context: Context?) {
         super.onAttach(context)
-        // initalise the listener reference
+        // initialise the listener reference
         if (context is OnCoinsSelected) {
             listener = context
         } else {

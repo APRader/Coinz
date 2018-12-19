@@ -1,8 +1,10 @@
 package com.example.s1611382.ilp
 
 import android.os.Bundle
+import android.support.v4.view.GravityCompat
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.view.MenuItem
 
 class Wallet : BaseActivity() {
     private lateinit var recyclerView: RecyclerView
@@ -30,6 +32,15 @@ class Wallet : BaseActivity() {
             adapter = viewAdapter
         }
 
+    }
+
+    /**
+     * override up navigation to behave like back navigation
+     * This prevents map from being drawn again.
+     */
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        onBackPressed()
+        return true
     }
 
 }

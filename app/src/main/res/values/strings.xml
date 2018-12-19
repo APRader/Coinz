@@ -1,9 +1,11 @@
 <resources>
     <string name="app_name">Coinz</string>
-    //access token for Mapbox
+
+    <!-- Map -->
     <string name="access_token">pk.eyJ1IjoiYXByYWRlciIsImEiOiJjam1odmQ1a2QxcDluM3BvOWJkZ3BhM3NjIn0.DygeFTcbsvcL4sZq-tofDQ</string>
     <string name="json_site">http://homepages.inf.ed.ac.uk/stg/coinz/%1$s/coinzmap.geojson</string>
 
+    <!-- General -->
     <string name="wallet">Wallet</string>
     <string name="bank">Bank</string>
     <string name="map">Main map</string>
@@ -28,7 +30,7 @@
     <string name="login_start_text">Welcome to Coinz! In order to play, please log in or register a new account.</string>
     <string name="login_button">Log in/register</string>
     <string name="login_failed_message">Log in failed</string>
-    <string name="download">Downloading your data...</string>
+    <string name="download">Downloading your data…</string>
 
     <!-- Network connection -->
     <string name="no_connection_title">No network connection</string>
@@ -55,5 +57,8 @@
     <!-- Permissions -->
     <string name="no_location_permission_title">Location permission not granted</string>
     <string name="no_location_permission_message">You denied permission to use location. Without that information you cannot collect new coins. Please accept access to location when you reopen the app so you can enjoy Coinz to the fullest extent!</string>
+
+    <!-- Timer -->
+    <string name="start_timer">Start collecting coins</string>
 
 </resources>
