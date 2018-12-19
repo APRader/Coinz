@@ -91,6 +91,7 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
 
     // for timer
     private var timerStarted = false
+    private var timerRunning = false
     private lateinit var countDownTimer: CountDownTimer
 
     private var firestore: FirebaseFirestore? = null
@@ -376,6 +377,7 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
     private fun startTimer() {
         timerButton.visibility = View.GONE
         timerStarted = true
+        timerRunning = true
         val timerView: TextView = findViewById(R.id.timer_id)
 
         countDownTimer = object: CountDownTimer(TIMER, INTERVAL) {
@@ -387,6 +389,8 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
 
             override fun onFinish() {
                 timerView.text = ""
+                // timer is not running, but has started today, so timerStarted stays true
+                timerRunning = false
             }
         }
 
@@ -511,13 +515,16 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
     /**
      * from LocationEngineListener
      * sets originLocation to new location to be used by other methods
+     * if timer is running, calls nearCoin
      */
     override fun onLocationChanged(location: Location?) {
         if (location == null) {
             Timber.d("[onLocationChanged] location is null")
         } else {
             originLocation = location
-            nearCoin(location)
+            if (timerRunning) {
+                nearCoin(location)
+            }
         }
     }
     @SuppressLint("MissingPermission")
@@ -594,6 +601,7 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
         val editor = prefSettings.edit()
         editor.putString(DOWNLOAD_KEY, downloadDate)
         editor.putString(JSON_KEY, lastJson)
+        editor.putString(TIMER_KEY, timerStarted.toString())
         editor.apply()
     }
 
