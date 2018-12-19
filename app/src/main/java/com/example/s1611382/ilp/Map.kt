@@ -124,6 +124,7 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
             if (menuItem.itemId == R.id.nav_wallet) { openWallet() }
             if (menuItem.itemId == R.id.nav_bank) { openBank() }
             if (menuItem.itemId == R.id.nav_trading) { openTrading() }
+            if (menuItem.itemId == R.id.nav_vending) { openVendingMachine() }
             if (menuItem.itemId == R.id.nav_logout) { logout() }
 
             false
@@ -236,6 +237,10 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
         val tradingIntent = Intent(this, Trading::class.java)
         tradingIntent.putExtra(COIN_WALLET, coinWallet)
         startActivity(tradingIntent)
+    }
+    private fun openVendingMachine() {
+        val vendingIntent = Intent(this, VendingMachine::class.java)
+        startActivity(vendingIntent)
     }
 
     /**
@@ -637,6 +642,8 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
         // use "" as the default value (this might be the first time the app is run)
         downloadDate = prefSettings.getString(DOWNLOAD_KEY, "")
         lastJson = prefSettings.getString(JSON_KEY, "")
+        val timerPref = prefSettings.getString(TIMER_KEY, "")
+        timerStarted = timerPref?.toBoolean() ?: false
         gold = prefSettings.getString(GOLD_KEY, "")?.toDoubleOrNull()
         if (gold == null) {
             gold = 0.0

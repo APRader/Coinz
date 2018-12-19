@@ -15,6 +15,10 @@
             android:icon="@drawable/ic_group_black_24dp"
             android:title="@string/trading" />
         <item
+            android:id="@+id/nav_vending"
+            android:icon="@drawable/ic_kitchen_black_24dp"
+            android:title="@string/vending" />
+        <item
             android:id="@+id/nav_logout"
             android:icon="@drawable/ic_power_settings_new_black_24dp"
             android:title="@string/logout" />

@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical">
+
+    <include
+        layout="@layout/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+
+    <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".VendingMachine">
+
+        <ImageView
+            android:id="@+id/collectible1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_file"
+            app:layout_constraintEnd_toStartOf="@+id/collectible2"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toStartOf="@+id/collectible3"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/collectible1"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toStartOf="@+id/collectible4"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/collectible2"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toStartOf="@+id/collectible5"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/collectible3"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toStartOf="@+id/collectible6"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/collectible4"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/collectible5"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible7"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toStartOf="@+id/collectible8"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/collectible1"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible8"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toStartOf="@+id/collectible9"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/collectible7"
+            app:layout_constraintTop_toBottomOf="@+id/collectible2"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible9"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toStartOf="@+id/collectible10"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/collectible8"
+            app:layout_constraintTop_toBottomOf="@+id/collectible3"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible10"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toStartOf="@+id/collectible11"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/collectible9"
+            app:layout_constraintTop_toBottomOf="@+id/collectible4"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible11"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toStartOf="@+id/collectible12"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/collectible10"
+            app:layout_constraintTop_toBottomOf="@+id/collectible5"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible12"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/collectible11"
+            app:layout_constraintTop_toBottomOf="@+id/collectible6"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible13"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toStartOf="@+id/collectible14"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/collectible7"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible14"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toStartOf="@+id/collectible15"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/collectible13"
+            app:layout_constraintTop_toBottomOf="@+id/collectible8"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible15"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toStartOf="@+id/collectible16"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/collectible14"
+            app:layout_constraintTop_toBottomOf="@+id/collectible9"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible16"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toStartOf="@+id/collectible17"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/collectible15"
+            app:layout_constraintTop_toBottomOf="@+id/collectible10"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible17"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toStartOf="@+id/collectible18"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/collectible16"
+            app:layout_constraintTop_toBottomOf="@+id/collectible11"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible18"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/collectible17"
+            app:layout_constraintTop_toBottomOf="@+id/collectible12"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible19"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toStartOf="@+id/collectible20"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/collectible13"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible20"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toStartOf="@+id/collectible21"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/collectible19"
+            app:layout_constraintTop_toBottomOf="@+id/collectible14"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible21"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toStartOf="@+id/collectible22"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/collectible20"
+            app:layout_constraintTop_toBottomOf="@+id/collectible15"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible22"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toStartOf="@+id/collectible23"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/collectible21"
+            app:layout_constraintTop_toBottomOf="@+id/collectible16"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible23"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toStartOf="@+id/collectible24"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/collectible22"
+            app:layout_constraintTop_toBottomOf="@+id/collectible17"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible24"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/collectible23"
+            app:layout_constraintTop_toBottomOf="@+id/collectible18"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible25"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toStartOf="@+id/collectible26"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/collectible19"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible26"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toStartOf="@+id/collectible27"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/collectible25"
+            app:layout_constraintTop_toBottomOf="@+id/collectible20"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible27"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toStartOf="@+id/collectible28"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/collectible26"
+            app:layout_constraintTop_toBottomOf="@+id/collectible21"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible28"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toStartOf="@+id/collectible29"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/collectible27"
+            app:layout_constraintTop_toBottomOf="@+id/collectible22"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible29"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toStartOf="@+id/collectible30"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/collectible28"
+            app:layout_constraintTop_toBottomOf="@+id/collectible23"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+        <ImageView
+            android:id="@+id/collectible30"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/attach_money"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/collectible29"
+            app:layout_constraintTop_toBottomOf="@+id/collectible24"
+            app:srcCompat="@drawable/highlight_off_big" />
+
+    </android.support.constraint.ConstraintLayout>
+
+</LinearLayout>

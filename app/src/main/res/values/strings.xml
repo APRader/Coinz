@@ -10,6 +10,7 @@
     <string name="bank">Bank</string>
     <string name="map">Main map</string>
     <string name="trading">Trading</string>
+    <string name="vending">Vending Machine</string>
     <string name="logout">Log out</string>
     <string name="email">Email address</string>
 
@@ -60,5 +61,10 @@
 
     <!-- Timer -->
     <string name="start_timer">Start collecting coins</string>
+    <string name="attach_file">attach file</string>
+    <string name="attach_money">attach money</string>
+
+    <!-- Vending machine -->
+
 
 </resources>
