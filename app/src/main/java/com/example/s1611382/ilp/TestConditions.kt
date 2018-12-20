@@ -8,11 +8,14 @@ import com.google.gson.Gson
 
 class TestConditions {
     private var coinWallet : ArrayList<Coin> = arrayListOf()
+    private var coinBank : ArrayList<Coin> = arrayListOf()
     companion object {
         private const val EMAIL_EMPTY = "empty@test.com"
         private const val EMAIL_TEST = "test@email.com"
         private const val EMAIL_COINY = "coiny@test.com"
-        private const val EMAIL_POOR = "poor@test.com"
+        private const val EMAIL_POOR_CASH = "poor@test.com"
+        private const val EMAIL_POOR_BANK = "poorbank@test.com"
+        private const val EMAIL_TRADE_READY = "tradeready@test.com"
         private const val PASSWORD = "password"
     }
 
@@ -70,15 +73,44 @@ class TestConditions {
     }
 
     /**
-     * sets up and returns email of a user that owns only 1 dollar and no gold :(
+     * sets up and returns email of a user that owns only 1 dollar cash and no gold :(
      */
-    fun poorUser(): String {
+    fun poorCashUser(): String {
         val firestore = firestoreSetup()
-        firestore?.collection("Users")?.document(EMAIL_POOR)?.delete()
+        firestore?.collection("Users")?.document(EMAIL_POOR_CASH)?.delete()
         val testDolr = Coin(id = "test", value = 1.toFloat(), currency = "DOLR")
         coinWallet.add(testDolr)
-        uploadCoins(BaseActivity.WALLET_KEY, EMAIL_COINY, coinWallet)
-        return EMAIL_COINY
+        uploadCoins(BaseActivity.WALLET_KEY, EMAIL_POOR_CASH, coinWallet)
+        return EMAIL_POOR_CASH
+    }
+
+    /**
+     * sets up and returns email of a user that owns only 1 dollar in bank and no gold :(
+     */
+    fun poorBankUser(): String {
+        val firestore = firestoreSetup()
+        firestore?.collection("Users")?.document(EMAIL_POOR_CASH)?.delete()
+        val testDolr = Coin(id = "test", value = 1.toFloat(), currency = "DOLR")
+        coinBank.add(testDolr)
+        uploadCoins(BaseActivity.BANK_KEY, EMAIL_POOR_BANK, coinBank)
+        return EMAIL_POOR_BANK
+    }
+
+    /**
+     * sets up and returns email of a user that is poor but able to send coins.
+     */
+    fun tradeReadyUser(): String {
+        val firestore = firestoreSetup()
+        firestore?.collection("Users")?.document(EMAIL_TRADE_READY)?.delete()
+        val testDolr = Coin(id = "test", value = 1.toFloat(), currency = "DOLR")
+        coinWallet.add(testDolr)
+        uploadCoins(BaseActivity.WALLET_KEY, EMAIL_TRADE_READY, coinWallet)
+        val document = firestore?.collection(BaseActivity.COLLECTION_KEY)?.document(EMAIL_TRADE_READY)
+        val data = HashMap<String, Any>()
+        // set depositCounter to 25, so user only has spare change. This means they can send coins.
+        data[BaseActivity.COUNTER_KEY] = 25
+        document?.set(data, SetOptions.merge())
+        return EMAIL_TRADE_READY
     }
 
 

@@ -169,6 +169,9 @@ class Bank: BaseActivity(), SelectionFragment.OnCoinsSelected {
         // re-add deposit button, so user can deposit again
         val depositButton: Button = findViewById(R.id.deposit_button_id)
         depositButton.visibility = View.VISIBLE
+
+        val counterView: TextView = findViewById(R.id.counter_id)
+        counterView.text = String.format(getString(R.string.counter), DEPOSIT_LIMIT - depositCounter!!)
     }
 
 

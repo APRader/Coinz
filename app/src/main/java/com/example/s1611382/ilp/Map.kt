@@ -596,7 +596,7 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
         editor.putString(LAST_DATE_KEY, lastDate)
         editor.apply()
 
-        //  all values are uploaded
+        // all values are uploaded
         // those variables that map doesn't use have to be gotten from shared prefs
         val gold = prefsToGold()
         val depositCounter = prefsToDepositCounter()

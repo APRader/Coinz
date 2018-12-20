@@ -66,12 +66,12 @@
     <string name="attach_money">attach money</string>
 
     <!-- Vending machine -->
-    <string name="get_collectible">Get a collectible for 20.000 GOLD ^.^!</string>
+    <string name="get_collectible">Get a collectible for 10,000 GOLD ^.^!</string>
     <string name="collectible_title">You got a collectible!</string>
     <string name="collectible_message_new">It\'s one you haven\'t owned before!</string>
     <string name="collectible_message_old">You already have this one.</string>
     <string name="poor_collectible_title">Not enough GOLD</string>
-    <string name="poor_collectible_message">You need at least 20.000 GOLD to buy a collectible.</string>
+    <string name="poor_collectible_message">You need at least 10,000 GOLD to buy a collectible.</string>
 
 
 </resources>

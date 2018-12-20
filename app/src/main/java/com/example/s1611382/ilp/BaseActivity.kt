@@ -41,9 +41,9 @@ abstract class BaseActivity : AppCompatActivity() {
         // user can deposit at most 25 collected coins per day
         const val DEPOSIT_LIMIT = 25
         // how many milliseconds the timer lasts
-        const val TIMER: Long = 600000
+        const val TIMER: Long = 900000
         const val INTERVAL: Long = 1000
-        const val COLLECTIBLE_PRICE: Int = 20000
+        const val COLLECTIBLE_PRICE: Int = 10000
     }
 
     open fun setToolbar() {

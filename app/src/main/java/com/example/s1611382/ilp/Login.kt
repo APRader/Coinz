@@ -59,7 +59,7 @@ class Login : BaseActivity() {
                 ?.document(email)
                 ?.get()
                 ?.addOnSuccessListener { document ->
-                    val gold = document.data?.get(GOLD_KEY) as Double?
+                    val gold = document.data?.get(GOLD_KEY)
                     val depositCounter = document.data?.get(COUNTER_KEY)
                     val lastDate = document.data?.get(LAST_DATE_KEY)
                     val downloadDate = document.data?.get(DOWNLOAD_KEY)

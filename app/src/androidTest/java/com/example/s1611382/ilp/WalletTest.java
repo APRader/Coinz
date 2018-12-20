@@ -53,7 +53,7 @@ public class WalletTest {
         public void beforeActivityLaunched() {
             TestConditions tc = new TestConditions();
             tc.signOutUser();
-            email = tc.poorUser();
+            email = tc.poorCashUser();
             password = tc.getPassword();
         }
     };
@@ -112,15 +112,7 @@ public class WalletTest {
             e.printStackTrace();
         }
 
-        ViewInteraction appCompatImageButton = onView(
-                allOf(withContentDescription("Navigate up"),
-                        childAtPosition(
-                                allOf(withId(R.id.toolbar),
-                                        childAtPosition(
-                                                withClassName(is("android.support.constraint.ConstraintLayout")),
-                                                2)),
-                                1),
-                        isDisplayed()));
+        ViewInteraction appCompatImageButton = onView(withContentDescription("Navigate up"));
         appCompatImageButton.perform(click());
 
         ViewInteraction navigationMenuItemView = onView(

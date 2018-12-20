@@ -28,6 +28,7 @@ import static android.support.test.espresso.action.ViewActions.replaceText;
 import static android.support.test.espresso.action.ViewActions.scrollTo;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
+import static android.support.test.espresso.matcher.ViewMatchers.withContentDescription;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
@@ -35,11 +36,11 @@ import static org.hamcrest.Matchers.is;
 
 
 /**
- * Tests that the app doesn't crash when clicking on the location centering fab without a location
+ * Tests that coin is deleted from wallet when sent.
  */
 @LargeTest
 @RunWith(AndroidJUnit4.class)
-public class CentreOnNullLocation {
+public class SendCoinTest {
     private String email;
     private String password;
 
@@ -52,7 +53,7 @@ public class CentreOnNullLocation {
         public void beforeActivityLaunched() {
             TestConditions tc = new TestConditions();
             tc.signOutUser();
-            email = tc.testUser();
+            email = tc.tradeReadyUser();
             password = tc.getPassword();
         }
     };
@@ -111,19 +112,34 @@ public class CentreOnNullLocation {
             e.printStackTrace();
         }
 
-        ViewInteraction floatingActionButton = onView(withId(R.id.fab));
-        floatingActionButton.perform(click());
-
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        ViewInteraction appCompatImageButton = onView(withContentDescription("Navigate up"));
+        appCompatImageButton.perform(click());
 
 
-        onView(withId(R.id.mapView)).check(ViewAssertions.matches(isDisplayed()));
+        ViewInteraction navigationMenuItemView = onView(
+                allOf(childAtPosition(
+                        allOf(withId(R.id.design_navigation_view),
+                                childAtPosition(
+                                        withId(R.id.nav_view),
+                                        0)),
+                        3),
+                        isDisplayed()));
+        navigationMenuItemView.perform(click());
+
+        ViewInteraction appCompatButton4 = onView(
+                allOf(withId(R.id.trade_button_id), withText("Send coins"),
+                        childAtPosition(
+                                childAtPosition(
+                                        withId(android.R.id.content),
+                                        0),
+                                1),
+                        isDisplayed()));
+        appCompatButton4.perform(click());
+
+        onView(withText("You can only trade spare change")).check(ViewAssertions.matches(isDisplayed()));
 
     }
+
 
     private static Matcher<View> childAtPosition(
             final Matcher<View> parentMatcher, final int position) {

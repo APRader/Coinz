@@ -2,8 +2,8 @@ package com.example.s1611382.ilp;
 
 
 import android.Manifest;
+import android.support.test.espresso.DataInteraction;
 import android.support.test.espresso.ViewInteraction;
-import android.support.test.espresso.assertion.ViewAssertions;
 import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.rule.GrantPermissionRule;
@@ -15,31 +15,36 @@ import android.view.ViewParent;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
+import org.hamcrest.core.IsInstanceOf;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import kotlin.jvm.JvmField;
 
+import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static android.support.test.espresso.action.ViewActions.replaceText;
 import static android.support.test.espresso.action.ViewActions.scrollTo;
+import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
+import static android.support.test.espresso.matcher.ViewMatchers.withContentDescription;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.is;
 
 
 /**
- * Tests that the app doesn't crash when clicking on the location centering fab without a location
+ * Tests whether coin gets properly deposited from wallet into bank
  */
 @LargeTest
 @RunWith(AndroidJUnit4.class)
-public class CentreOnNullLocation {
+public class BankDepositTest {
     private String email;
     private String password;
 
@@ -52,7 +57,7 @@ public class CentreOnNullLocation {
         public void beforeActivityLaunched() {
             TestConditions tc = new TestConditions();
             tc.signOutUser();
-            email = tc.testUser();
+            email = tc.poorCashUser();
             password = tc.getPassword();
         }
     };
@@ -111,19 +116,72 @@ public class CentreOnNullLocation {
             e.printStackTrace();
         }
 
-        ViewInteraction floatingActionButton = onView(withId(R.id.fab));
-        floatingActionButton.perform(click());
+        ViewInteraction appCompatImageButton = onView(withContentDescription("Navigate up"));
+        appCompatImageButton.perform(click());
 
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        ViewInteraction navigationMenuItemView = onView(
+                allOf(childAtPosition(
+                        allOf(withId(R.id.design_navigation_view),
+                                childAtPosition(
+                                        withId(R.id.nav_view),
+                                        0)),
+                        2),
+                        isDisplayed()));
+        navigationMenuItemView.perform(click());
 
+        ViewInteraction appCompatButton4 = onView(
+                allOf(withId(R.id.deposit_button_id), withText("Make deposit"),
+                        childAtPosition(
+                                allOf(withId(R.id.bank_id),
+                                        childAtPosition(
+                                                withId(android.R.id.content),
+                                                0)),
+                                5),
+                        isDisplayed()));
+        appCompatButton4.perform(click());
 
-        onView(withId(R.id.mapView)).check(ViewAssertions.matches(isDisplayed()));
+        DataInteraction appCompatCheckedTextView = onData(anything())
+                .inAdapterView(allOf(withId(android.R.id.list),
+                        childAtPosition(
+                                withClassName(is("android.widget.LinearLayout")),
+                                1)))
+                .atPosition(0);
+        appCompatCheckedTextView.perform(click());
+
+        ViewInteraction appCompatButton5 = onView(
+                allOf(withId(R.id.convert_coins_id), withText("Deposit selected coins"),
+                        childAtPosition(
+                                childAtPosition(
+                                        withId(R.id.deposit_placeholder),
+                                        0),
+                                0),
+                        isDisplayed()));
+        appCompatButton5.perform(click());
+
+        ViewInteraction appCompatButton6 = onView(
+                allOf(withId(R.id.conversion_button_id), withText("Convert coins in bank to GOLD"),
+                        childAtPosition(
+                                allOf(withId(R.id.bank_id),
+                                        childAtPosition(
+                                                withId(android.R.id.content),
+                                                0)),
+                                8),
+                        isDisplayed()));
+        appCompatButton6.perform(click());
+
+        ViewInteraction checkedTextView = onView(
+                allOf(withId(android.R.id.text1),
+                        childAtPosition(
+                                allOf(withId(android.R.id.list),
+                                        childAtPosition(
+                                                IsInstanceOf.<View>instanceOf(android.widget.LinearLayout.class),
+                                                1)),
+                                0),
+                        isDisplayed()));
+        checkedTextView.check(matches(isDisplayed()));
 
     }
+
 
     private static Matcher<View> childAtPosition(
             final Matcher<View> parentMatcher, final int position) {
