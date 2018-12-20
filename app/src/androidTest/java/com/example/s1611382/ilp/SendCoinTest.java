@@ -2,6 +2,7 @@ package com.example.s1611382.ilp;
 
 
 import android.Manifest;
+import android.support.test.espresso.DataInteraction;
 import android.support.test.espresso.ViewInteraction;
 import android.support.test.espresso.assertion.ViewAssertions;
 import android.support.test.filters.LargeTest;
@@ -21,17 +22,20 @@ import org.junit.runner.RunWith;
 
 import kotlin.jvm.JvmField;
 
+import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static android.support.test.espresso.action.ViewActions.replaceText;
 import static android.support.test.espresso.action.ViewActions.scrollTo;
+import static android.support.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
 import static android.support.test.espresso.matcher.ViewMatchers.withContentDescription;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.is;
 
 
@@ -126,6 +130,7 @@ public class SendCoinTest {
                         isDisplayed()));
         navigationMenuItemView.perform(click());
 
+
         ViewInteraction appCompatButton4 = onView(
                 allOf(withId(R.id.trade_button_id), withText("Send coins"),
                         childAtPosition(
@@ -136,7 +141,73 @@ public class SendCoinTest {
                         isDisplayed()));
         appCompatButton4.perform(click());
 
-        onView(withText("You can only trade spare change")).check(ViewAssertions.matches(isDisplayed()));
+        ViewInteraction textInputEditText9 = onView(
+                allOf(withId(R.id.trade_edit_id),
+                        childAtPosition(
+                                childAtPosition(
+                                        withClassName(is("android.support.design.widget.TextInputLayout")),
+                                        0),
+                                0),
+                        isDisplayed()));
+        textInputEditText9.perform(replaceText("test@email.com"), closeSoftKeyboard());
+
+        ViewInteraction appCompatButton5 = onView(
+                allOf(withId(android.R.id.button1), withText("OK"),
+                        childAtPosition(
+                                childAtPosition(
+                                        withClassName(is("android.widget.ScrollView")),
+                                        0),
+                                3)));
+        appCompatButton5.perform(scrollTo(), click());
+
+        DataInteraction appCompatCheckedTextView = onData(anything())
+                .inAdapterView(allOf(withId(android.R.id.list),
+                        childAtPosition(
+                                withClassName(is("android.widget.LinearLayout")),
+                                1)))
+                .atPosition(0);
+        appCompatCheckedTextView.perform(click());
+
+        ViewInteraction appCompatButton6 = onView(
+                allOf(withId(R.id.convert_coins_id), withText("Send selected coins"),
+                        childAtPosition(
+                                childAtPosition(
+                                        withId(R.id.selection_placeholder),
+                                        0),
+                                0),
+                        isDisplayed()));
+        appCompatButton6.perform(click());
+
+        ViewInteraction appCompatButton7 = onView(
+                allOf(withId(R.id.trade_button_id), withText("Send coins"),
+                        childAtPosition(
+                                childAtPosition(
+                                        withId(android.R.id.content),
+                                        0),
+                                1),
+                        isDisplayed()));
+        appCompatButton7.perform(click());
+
+        ViewInteraction textInputEditText10 = onView(
+                allOf(withId(R.id.trade_edit_id),
+                        childAtPosition(
+                                childAtPosition(
+                                        withClassName(is("android.support.design.widget.TextInputLayout")),
+                                        0),
+                                0),
+                        isDisplayed()));
+        textInputEditText10.perform(replaceText("test@email.com"), closeSoftKeyboard());
+
+        ViewInteraction appCompatButton8 = onView(
+                allOf(withId(android.R.id.button1), withText("OK"),
+                        childAtPosition(
+                                childAtPosition(
+                                        withClassName(is("android.widget.ScrollView")),
+                                        0),
+                                3)));
+        appCompatButton8.perform(scrollTo(), click());
+
+        onView(withId(android.R.id.text1)).check(doesNotExist());
 
     }
 
