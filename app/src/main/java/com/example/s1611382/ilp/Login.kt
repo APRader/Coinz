@@ -61,7 +61,7 @@ class Login : BaseActivity() {
                 ?.addOnSuccessListener { document ->
                     val gold = document.data?.get(GOLD_KEY) as Double?
                     val depositCounter = document.data?.get(COUNTER_KEY)
-                    val counterDate = document.data?.get(COUNTER_DATE_KEY)
+                    val lastDate = document.data?.get(LAST_DATE_KEY)
                     val downloadDate = document.data?.get(DOWNLOAD_KEY)
                     val timerStarted = document.data?.get(TIMER_KEY)
                     var walletString = document.data?.get(WALLET_KEY).toString()
@@ -78,7 +78,7 @@ class Login : BaseActivity() {
                     val editor = settings.edit()
                     editor.putString(GOLD_KEY, gold.toString())
                     editor.putString(COUNTER_KEY, depositCounter.toString())
-                    editor.putString(COUNTER_DATE_KEY, counterDate.toString())
+                    editor.putString(LAST_DATE_KEY, lastDate.toString())
                     editor.putString(DOWNLOAD_KEY, downloadDate.toString())
                     editor.putString(TIMER_KEY, timerStarted.toString())
                     editor.putString(WALLET_KEY, walletString)

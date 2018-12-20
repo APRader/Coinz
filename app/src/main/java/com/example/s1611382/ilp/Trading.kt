@@ -29,7 +29,7 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
 
     // counts how many deposits have been made today
     private var depositCounter: Int? = 0
-    private var counterDate: String? = ""
+    private var lastDate: String? = ""
 
     override fun onCreate(savedInstanceState: Bundle?   ) {
         super.onCreate(savedInstanceState)
@@ -204,29 +204,24 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
     }
 
     /**
-     * gets depositCounter and counterDate from shared preferences
+     * restores shared preferences
      */
     override fun onStart() {
         super.onStart()
-        val settings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
-        depositCounter = settings.getString(COUNTER_KEY, "0")?.toIntOrNull()
-        if (depositCounter == null) {
-            depositCounter = 0
-        }
-
-        counterDate = settings.getString(COUNTER_DATE_KEY, "")
+        depositCounter = prefsToDepositCounter()
+        lastDate = prefsToLastDate()
 
         val sdf = SimpleDateFormat("yyyy/MM/dd", Locale.UK)
         val today = sdf.format(Date())
         // if it's a new day, reset the deposit counter
-        if (today != counterDate) {
-            counterDate = today
+        if (today != lastDate) {
+            lastDate = today
             depositCounter = 0
         }
     }
 
     /**
-     * saves depositCounter and counterDate in shared preferences
+     * saves in shared preferences
      */
     override fun onPause() {
         super.onPause()
@@ -236,7 +231,7 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
         val settings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
         val editor = settings.edit()
         editor.putString(COUNTER_KEY, depositCounter.toString())
-        editor.putString(COUNTER_DATE_KEY, counterDate)
+        editor.putString(LAST_DATE_KEY, lastDate)
         editor.apply()
     }
 
@@ -253,7 +248,8 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
      *  when user presses back button, fragment will be closed,
      *  so we need to set button that launched fragment to visible
      */
-    override fun onBackPressed() { super.onBackPressed()
+    override fun onBackPressed() {
+        super.onBackPressed()
        tradeButton.visibility = View.VISIBLE
     }
 }

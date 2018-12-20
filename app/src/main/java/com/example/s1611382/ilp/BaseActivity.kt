@@ -4,7 +4,6 @@ import android.content.Context
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.app.ActionBar
 import android.support.v7.widget.Toolbar
-import android.view.MenuItem
 import com.google.common.reflect.TypeToken
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -29,7 +28,7 @@ abstract class BaseActivity : AppCompatActivity() {
         const val TRADING_KEY = "Trading"
         const val GOLD_KEY = "Gold"
         const val COUNTER_KEY = "DepositCounter"
-        const val COUNTER_DATE_KEY = "CounterDate"
+        const val LAST_DATE_KEY = "LastDate"
         const val COLLECTIBLES_KEY = "Collectibles"
         const val TIMER_KEY = "TimerStarted"
         const val PREF_FILE = "MyPrefsFile"
@@ -177,6 +176,63 @@ abstract class BaseActivity : AppCompatActivity() {
             collectibles = gson.fromJson(json, type)
         }
         return collectibles
+    }
+
+    /**
+     * returns value for gold from shared preferences
+     */
+    fun prefsToGold(): Double {
+        val prefSettings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
+        var gold = prefSettings.getString(GOLD_KEY, "")?.toDoubleOrNull()
+        if (gold == null) {
+            gold = 0.0
+        }
+        return gold
+    }
+
+    /**
+     * returns value for depositCounter from shared preferences
+     */
+    fun prefsToDepositCounter(): Int {
+        val prefSettings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
+        var depositCounter = prefSettings.getString(COUNTER_KEY, "0")?.toIntOrNull()
+        if (depositCounter == null) {
+            depositCounter = 0
+        }
+        return depositCounter
+    }
+
+    /**
+     * returns value for timerStarted from shared preferences
+     */
+    fun prefsToTimerStarted(): Boolean {
+        val prefSettings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
+        val timerPref = prefSettings.getString(TIMER_KEY, "")
+        return timerPref?.toBoolean() ?: false
+    }
+
+    /**
+     * returns value for downloadDate from shared preferences
+     */
+    fun prefsToDownloadDate(): String? {
+        val prefSettings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
+        return prefSettings.getString(DOWNLOAD_KEY, "")
+    }
+
+    /**
+     * returns value for lastJson from shared preferences
+     */
+    fun prefsToLastJson(): String? {
+        val prefSettings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
+        return prefSettings.getString(JSON_KEY, "")
+    }
+
+    /**
+     * returns value for lastDate from shared preferences
+     */
+    fun prefsToLastDate(): String? {
+        val prefSettings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
+        return prefSettings.getString(LAST_DATE_KEY, "")
     }
 
     /**

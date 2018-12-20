@@ -87,23 +87,22 @@ class VendingMachine : BaseActivity() {
         return true
     }
 
+    /**
+     * restore shared preferences, set gold text view and start populating collectibles
+     */
     override fun onStart() {
         super.onStart()
-        val settings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
-        gold = settings.getString(GOLD_KEY, "")?.toDoubleOrNull()
-        if (gold == null) {
-            gold = 0.0
-        }
+        gold = prefsToGold()
+        collectibles = prefsToCollectiblesArray(COLLECTIBLES_KEY)
+
         val goldView: TextView = findViewById(R.id.gold_id)
         goldView.text = String.format(getString(R.string.gold), gold)
-
-        collectibles = prefsToCollectiblesArray(COLLECTIBLES_KEY)
 
         populateCollectibles()
     }
 
     /**
-     * saves colelctibles array and GOLD in shared preferences
+     * saves collectibles array and GOLD in shared preferences
      */
     override fun onPause() {
         super.onPause()

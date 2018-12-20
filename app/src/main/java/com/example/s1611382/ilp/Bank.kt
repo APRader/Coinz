@@ -3,7 +3,6 @@ package com.example.s1611382.ilp
 import android.content.Context
 import android.os.Bundle
 import android.support.v4.app.FragmentManager
-import android.support.v4.app.NavUtils
 import android.support.v7.app.AlertDialog
 import android.view.MenuItem
 import android.view.View
@@ -26,7 +25,7 @@ class Bank: BaseActivity(), SelectionFragment.OnCoinsSelected {
 
     // counts how many deposits have been made today
     private var depositCounter: Int? = 0
-    private var counterDate: String? = ""
+    private var lastDate: String? = ""
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -203,32 +202,27 @@ class Bank: BaseActivity(), SelectionFragment.OnCoinsSelected {
         }
     }
 
+    /**
+     * restores shared preferences, resets deposit counter and sets gold text view
+     */
     override fun onStart() {
         super.onStart()
-        val settings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
-        gold = settings.getString(GOLD_KEY, "")?.toDoubleOrNull()
-        if (gold == null) {
-            gold = 0.0
-        }
-        val goldView: TextView = findViewById(R.id.gold_id)
-        goldView.text = String.format(getString(R.string.gold), gold)
 
-        depositCounter = settings.getString(COUNTER_KEY, "0")?.toIntOrNull()
-        if (depositCounter == null) {
-            depositCounter = 0
-        }
-
-        counterDate = settings.getString(COUNTER_DATE_KEY, "")
+        gold = prefsToGold()
+        depositCounter = prefsToDepositCounter()
+        lastDate = prefsToLastDate()
+        coinBank = prefsToCoinList(BANK_KEY)
 
         val sdf = SimpleDateFormat("yyyy/MM/dd", Locale.UK)
         val today = sdf.format(Date())
         // if it's a new day, reset the deposit counter
-        if (today != counterDate) {
-            counterDate = today
+        if (today != lastDate) {
+            lastDate = today
             depositCounter = 0
         }
 
-        coinBank = prefsToCoinList(BANK_KEY)
+        val goldView: TextView = findViewById(R.id.gold_id)
+        goldView.text = String.format(getString(R.string.gold), gold)
     }
 
 
@@ -242,7 +236,7 @@ class Bank: BaseActivity(), SelectionFragment.OnCoinsSelected {
         val editor = settings.edit()
         editor.putString(GOLD_KEY, gold.toString())
         editor.putString(COUNTER_KEY, depositCounter.toString())
-        editor.putString(COUNTER_DATE_KEY, counterDate)
+        editor.putString(LAST_DATE_KEY, lastDate)
         editor.apply()
         listToPrefs(coinBank, BANK_KEY)
         listToPrefs(coinWallet, WALLET_KEY)

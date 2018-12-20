@@ -76,10 +76,7 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
     private var markerPairs: MutableList<Pair<Coin, Marker?>> = mutableListOf()
     // each item in the list contains a coin with its different properties
     private var coinWallet : ArrayList<Coin> = arrayListOf()
-    private var coinBank : ArrayList<Coin> = arrayListOf()
-    private var gold: Double? = 0.0
-    private var depositCounter: Int? = 0
-    private var counterDate: String? = ""
+    private var lastDate: String? = ""
     // different from wallet: it stores coins which you collected (not traded)
     private var collectedCoins : ArrayList<String> = arrayListOf()
     // Json features of the downloaded file
@@ -552,62 +549,75 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
         } else {
             Timber.d("locationLayerPlugin not initialized")
         }
-        // Restore preferences
-        val prefSettings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
 
-        // use "" as the default value (this might be the first time the app is run)
-        downloadDate = prefSettings.getString(DOWNLOAD_KEY, "")
-        lastJson = prefSettings.getString(JSON_KEY, "")
-        gold = prefSettings.getString(GOLD_KEY, "")?.toDoubleOrNull()
-        if (gold == null) {
-            gold = 0.0
-        }
-        depositCounter = prefSettings.getString(COUNTER_KEY, "0")?.toIntOrNull()
-        if (depositCounter == null) {
-            depositCounter = 0
-        }
-
-        counterDate = prefSettings.getString(COUNTER_DATE_KEY, "")
-        val timerPref = prefSettings.getString(TIMER_KEY, "")
-        timerStarted = timerPref?.toBoolean() ?: false
+        // Restore shared preferences
+        downloadDate = prefsToDownloadDate()
+        lastJson = prefsToLastJson()
+        lastDate = prefsToLastDate()
+        timerStarted = prefsToTimerStarted()
+        coinWallet = prefsToCoinList(WALLET_KEY)
+        collectedCoins = prefsToStringList(COLLECTED_KEY)
 
         val sdf = SimpleDateFormat("yyyy/MM/dd", Locale.UK)
         val today = sdf.format(Date())
         // if it's a new day, reset the timer
-        if (today != counterDate) {
-            counterDate = today
+        if (today != lastDate) {
+            lastDate = today
             timerStarted = false
         }
 
+        // display timer button only when player has not used it today
         if (timerStarted) {
             timerButton.visibility = View.GONE
         } else {
             timerButton.visibility = View.VISIBLE
         }
-
-        coinWallet = prefsToCoinList(WALLET_KEY)
-        coinBank = prefsToCoinList(BANK_KEY)
-        collectedCoins = prefsToStringList(COLLECTED_KEY)
     }
 
     override fun onResume() {
         super.onResume()
         mapView?.onResume()
     }
+
+    /**
+     * gets values into shared preferences and firestore
+     */
     override fun onPause() {
         super.onPause()
         mapView?.onPause()
 
+        // Only values that can be changed in this activity are stored in shared prefs
         listToPrefs(coinWallet, WALLET_KEY)
         listToPrefs(collectedCoins, COLLECTED_KEY)
-        // All objects are from android.context.Context
         val prefSettings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
-        // We need an Editor object to make preference changes
         val editor = prefSettings.edit()
         editor.putString(DOWNLOAD_KEY, downloadDate)
         editor.putString(JSON_KEY, lastJson)
         editor.putString(TIMER_KEY, timerStarted.toString())
+        editor.putString(LAST_DATE_KEY, lastDate)
         editor.apply()
+
+        // this is the only place data is uploaded to firestore, so all values are uploaded
+        // those variables that map doesn't use have to be gotten from shared prefs
+        val gold = prefsToGold()
+        val depositCounter = prefsToDepositCounter()
+        coinWallet = prefsToCoinList(WALLET_KEY)
+        val coinBank = prefsToCoinList(BANK_KEY)
+        collectedCoins = prefsToStringList(COLLECTED_KEY)
+        val collectibles = prefsToCollectiblesArray(COLLECTIBLES_KEY)
+
+        uploadCoins(WALLET_KEY, coinWallet)
+        uploadCoins(BANK_KEY, coinBank)
+        uploadList(COLLECTED_KEY, collectedCoins)
+        uploadBooleanArray(COLLECTIBLES_KEY, collectibles)
+        val document = firestore?.collection(COLLECTION_KEY)?.document(firebaseEmail)
+        val data = HashMap<String, Any>()
+        data[GOLD_KEY] = gold
+        data[COUNTER_KEY] = depositCounter
+        data[LAST_DATE_KEY] = lastDate!!
+        data[DOWNLOAD_KEY] = downloadDate!!
+        data[TIMER_KEY] = timerStarted
+        document?.set(data, SetOptions.merge())
     }
 
     /**
@@ -625,7 +635,7 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
     }
 
     /**
-     * is called at the end of the app's lifecycle, so we have to store everything onto firebase
+     * is called at the end of the app's lifecycle, so we have to deactivate location services
      */
     override fun onDestroy() {
         super.onDestroy()
@@ -636,42 +646,6 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
             Timber.d("locationLayerPlugin not initialized")
         }
 
-        // Restore preferences
-        val prefSettings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
-
-        // use "" as the default value (this might be the first time the app is run)
-        downloadDate = prefSettings.getString(DOWNLOAD_KEY, "")
-        lastJson = prefSettings.getString(JSON_KEY, "")
-        val timerPref = prefSettings.getString(TIMER_KEY, "")
-        timerStarted = timerPref?.toBoolean() ?: false
-        gold = prefSettings.getString(GOLD_KEY, "")?.toDoubleOrNull()
-        if (gold == null) {
-            gold = 0.0
-        }
-        depositCounter = prefSettings.getString(COUNTER_KEY, "0")?.toIntOrNull()
-        if (depositCounter == null) {
-            depositCounter = 0
-        }
-
-        coinWallet = prefsToCoinList(WALLET_KEY)
-        coinBank = prefsToCoinList(BANK_KEY)
-        collectedCoins = prefsToStringList(COLLECTED_KEY)
-        val collectibles = prefsToCollectiblesArray(COLLECTIBLES_KEY)
-
-        // uploads all information onto firestore,
-        // so that when app is started again, firestore is correct
-        uploadCoins(WALLET_KEY, coinWallet)
-        uploadCoins(BANK_KEY, coinBank)
-        uploadList(COLLECTED_KEY, collectedCoins)
-        uploadBooleanArray(COLLECTIBLES_KEY, collectibles)
-        val document = firestore?.collection(COLLECTION_KEY)?.document(firebaseEmail)
-        val data = HashMap<String, Any>()
-        data[GOLD_KEY] = gold!!
-        data[COUNTER_KEY] = depositCounter!!
-        data[COUNTER_DATE_KEY] = counterDate!!
-        data[DOWNLOAD_KEY] = downloadDate!!
-        data[TIMER_KEY] = timerStarted
-        document?.set(data, SetOptions.merge())
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
