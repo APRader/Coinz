@@ -37,6 +37,12 @@
         android:textSize="18sp"
         android:textStyle="bold" />
 
+    <TextView
+        android:id="@+id/counter_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="18sp" />
+
     <Button
         android:id="@+id/deposit_button_id"
         style="@android:style/Widget.Material.Button"

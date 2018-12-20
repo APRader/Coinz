@@ -54,6 +54,7 @@
     <string name="deposit_limit_message_many">You are trying to deposit %1$d coins that you collected yourself, but you have already deposited %2$d coins today.
         The limit is 25 collected coins per day, so please select at most %3$d to deposit.</string>
     <string name="gold">Your GOLD: %1$.0f</string>
+    <string name="counter">Number of coins left to deposit today: %1$d</string>
 
     <!-- Permissions -->
     <string name="no_location_permission_title">Location permission not granted</string>

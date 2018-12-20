@@ -203,7 +203,7 @@ class Bank: BaseActivity(), SelectionFragment.OnCoinsSelected {
     }
 
     /**
-     * restores shared preferences, resets deposit counter and sets gold text view
+     * restores shared preferences, resets deposit counter and sets text views
      */
     override fun onStart() {
         super.onStart()
@@ -223,6 +223,9 @@ class Bank: BaseActivity(), SelectionFragment.OnCoinsSelected {
 
         val goldView: TextView = findViewById(R.id.gold_id)
         goldView.text = String.format(getString(R.string.gold), gold)
+
+        val counterView: TextView = findViewById(R.id.counter_id)
+        counterView.text = String.format(getString(R.string.counter), DEPOSIT_LIMIT - depositCounter!!)
     }
 
 
