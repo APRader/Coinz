@@ -8,6 +8,10 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -27,6 +31,9 @@ class Bank: BaseActivity(), SelectionFragment.OnCoinsSelected {
     private var depositCounter: Int? = 0
     private var lastDate: String? = ""
 
+    private var firestore: FirebaseFirestore? = null
+    private var firebaseEmail: String = ""
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,6 +42,10 @@ class Bank: BaseActivity(), SelectionFragment.OnCoinsSelected {
         @Suppress("UNCHECKED_CAST")
         rates = intent?.extras?.getSerializable(RATES) as HashMap<String, Float>
         coinWallet = intent?.extras?.getParcelableArrayList(COIN_WALLET)!!
+
+        firestore = firestoreSetup()
+        val firebaseUser = FirebaseAuth.getInstance().currentUser
+        firebaseEmail = firebaseUser?.email.toString()
 
         val ratesView: TextView = findViewById(R.id.rates_id)
         var ratesText = "No rates available"
@@ -230,7 +241,7 @@ class Bank: BaseActivity(), SelectionFragment.OnCoinsSelected {
 
 
     /**
-     * all values that could have been changed are stored in shared preferences
+     * all values that could have been changed are stored in shared preferences and firestore
      */
     override fun onPause() {
         super.onPause()
@@ -243,6 +254,15 @@ class Bank: BaseActivity(), SelectionFragment.OnCoinsSelected {
         editor.apply()
         listToPrefs(coinBank, BANK_KEY)
         listToPrefs(coinWallet, WALLET_KEY)
+
+        val document = firestore?.collection(COLLECTION_KEY)?.document(firebaseEmail)
+        val data = HashMap<String, Any>()
+        data[GOLD_KEY] = gold!!
+        data[COUNTER_KEY] = depositCounter!!
+        data[LAST_DATE_KEY] = lastDate!!
+        document?.set(data, SetOptions.merge())
+        uploadCoins(WALLET_KEY, coinWallet)
+        uploadCoins(BANK_KEY, coinBank)
     }
 
     /**

@@ -92,7 +92,6 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
     private lateinit var countDownTimer: CountDownTimer
 
     private var firestore: FirebaseFirestore? = null
-    private var firebaseUser: FirebaseUser? = null
     private var firebaseEmail: String = ""
 
     private lateinit var timerButton: Button
@@ -109,7 +108,7 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
         mapView?.getMapAsync(this)
 
         firestore = firestoreSetup()
-        firebaseUser = FirebaseAuth.getInstance().currentUser
+        val firebaseUser = FirebaseAuth.getInstance().currentUser
         firebaseEmail = firebaseUser?.email.toString()
 
         mDrawerLayout = findViewById(R.id.drawer_layout)
@@ -597,7 +596,7 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
         editor.putString(LAST_DATE_KEY, lastDate)
         editor.apply()
 
-        // this is the only place data is uploaded to firestore, so all values are uploaded
+        //  all values are uploaded
         // those variables that map doesn't use have to be gotten from shared prefs
         val gold = prefsToGold()
         val depositCounter = prefsToDepositCounter()

@@ -17,11 +17,9 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
-    private var firestore: FirebaseFirestore? = null
     private var coinWallet: ArrayList<Coin> = arrayListOf()
     private lateinit var tradeButton: Button
     private lateinit var receiveButton: Button
-    private var user: FirebaseUser? = null
 
     private lateinit var fragmentManager: FragmentManager
     private val tradeSelection = "trade"
@@ -31,17 +29,22 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
     private var depositCounter: Int? = 0
     private var lastDate: String? = ""
 
+    private var firestore: FirebaseFirestore? = null
+    private var firebaseUser: FirebaseUser? = null
+    private var firebaseEmail: String = ""
+
     override fun onCreate(savedInstanceState: Bundle?   ) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.trading)
         setToolbar()
 
         fragmentManager = supportFragmentManager
-        user = FirebaseAuth.getInstance().currentUser
 
         coinWallet = intent?.extras?.getParcelableArrayList(COIN_WALLET)!!
 
         firestore = firestoreSetup()
+        firebaseUser = FirebaseAuth.getInstance().currentUser
+        firebaseEmail = firebaseUser?.email.toString()
 
         tradeButton = findViewById(R.id.trade_button_id)
         receiveButton = findViewById(R.id.receive_button_id)
@@ -69,7 +72,7 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
                 val userInput = editText.text
                 if (!userInput.isBlank()) {
                     recipient = userInput.toString()
-                    val email = user?.email.toString()
+                    val email = firebaseEmail
                     if (email != recipient) {
                         chooseCoins()
                     } else {
@@ -105,7 +108,7 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
      */
     private fun sendCoins(recipient: String?, sentCoins: ArrayList<Coin>?) {
         if (recipient != null) {
-            if (user != null ) {
+            if (firebaseUser != null ) {
                 val collection = firestore?.collection(COLLECTION_KEY)
                         ?.document(recipient)
                         ?.collection(TRADING_KEY)
@@ -138,13 +141,10 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
         fragmentManager.popBackStack()
         tradeButton.visibility = View.VISIBLE
 
-        val user = FirebaseAuth.getInstance().currentUser
-        val email = user?.email.toString()
-
         var counter = 0
 
         val collection = firestore?.collection(COLLECTION_KEY)
-                ?.document(email)
+                ?.document(firebaseEmail)
                 ?.collection(TRADING_KEY)
 
         collection?.get()
@@ -221,18 +221,24 @@ class Trading : BaseActivity(), SelectionFragment.OnCoinsSelected{
     }
 
     /**
-     * saves in shared preferences
+     * saves in shared preferences and firestore
      */
     override fun onPause() {
         super.onPause()
 
         listToPrefs(coinWallet, WALLET_KEY)
-
         val settings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
         val editor = settings.edit()
         editor.putString(COUNTER_KEY, depositCounter.toString())
         editor.putString(LAST_DATE_KEY, lastDate)
         editor.apply()
+
+        uploadCoins(WALLET_KEY, coinWallet)
+        val document = firestore?.collection(COLLECTION_KEY)?.document(firebaseEmail)
+        val data = HashMap<String, Any>()
+        data[COUNTER_KEY] = depositCounter!!
+        data[LAST_DATE_KEY] = lastDate!!
+        document?.set(data, SetOptions.merge())
     }
 
     /**

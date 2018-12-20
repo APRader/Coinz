@@ -7,6 +7,9 @@ import android.view.MenuItem
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 
 class VendingMachine : BaseActivity() {
     private var gold: Double? = 0.0
@@ -14,10 +17,17 @@ class VendingMachine : BaseActivity() {
     private var collectibles: Array<Boolean> = Array(30) {false}
     private lateinit var vendingButton: Button
 
+    private var firestore: FirebaseFirestore? = null
+    private var firebaseEmail: String = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.vending_machine)
         setToolbar()
+
+        firestore = firestoreSetup()
+        val firebaseUser = FirebaseAuth.getInstance().currentUser
+        firebaseEmail = firebaseUser?.email.toString()
 
         vendingButton = findViewById(R.id.vending_button_id)
         vendingButton.setOnClickListener{_ -> buyCollectible() }
@@ -102,7 +112,7 @@ class VendingMachine : BaseActivity() {
     }
 
     /**
-     * saves collectibles array and GOLD in shared preferences
+     * saves values in shared preferences and firestore
      */
     override fun onPause() {
         super.onPause()
@@ -113,5 +123,11 @@ class VendingMachine : BaseActivity() {
         val editor = settings.edit()
         editor.putString(COUNTER_KEY, gold.toString())
         editor.apply()
+
+        uploadBooleanArray(COLLECTIBLES_KEY, collectibles)
+        val document = firestore?.collection(COLLECTION_KEY)?.document(firebaseEmail)
+        val data = HashMap<String, Any>()
+        data[GOLD_KEY] = gold!!
+        document?.set(data, SetOptions.merge())
     }
 }
