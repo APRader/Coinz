@@ -59,7 +59,7 @@
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toEndOf="@+id/collectible1"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/collectible2_attach_money" />
+            app:srcCompat="@drawable/highlight_off_big" />
 
         <ImageView
             android:id="@+id/collectible3"

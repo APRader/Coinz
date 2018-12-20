@@ -30,6 +30,7 @@ abstract class BaseActivity : AppCompatActivity() {
         const val GOLD_KEY = "Gold"
         const val COUNTER_KEY = "DepositCounter"
         const val COUNTER_DATE_KEY = "CounterDate"
+        const val COLLECTIBLES_KEY = "Collectibles"
         const val TIMER_KEY = "TimerStarted"
         const val PREF_FILE = "MyPrefsFile"
         const val COIN_LIST = "coinList"
@@ -43,6 +44,7 @@ abstract class BaseActivity : AppCompatActivity() {
         // how many milliseconds the timer lasts
         const val TIMER: Long = 600000
         const val INTERVAL: Long = 1000
+        const val COLLECTIBLE_PRICE: Int = 20000
     }
 
     open fun setToolbar() {
@@ -98,6 +100,21 @@ abstract class BaseActivity : AppCompatActivity() {
     }
 
     /**
+     * update Firestore with contents of local array of Boolean
+     */
+    fun uploadBooleanArray(key: String, array: Array<Boolean>) {
+        val firestore = firestoreSetup()
+        val user = FirebaseAuth.getInstance().currentUser
+        val email = user?.email.toString()
+
+        val gson = Gson()
+        val json = gson.toJson(array)
+        firestore?.collection(COLLECTION_KEY)
+                ?.document(email)
+                ?.update(key, json)
+    }
+
+    /**
      * stores a list in shared preferences as json string, with the given key
      */
     fun listToPrefs(list: ArrayList<*>, prefsKey: String) {
@@ -105,6 +122,18 @@ abstract class BaseActivity : AppCompatActivity() {
         val editor = prefSettings.edit()
         val gson = Gson()
         val json = gson.toJson(list)
+        editor.putString(prefsKey, json)
+        editor.apply()
+    }
+
+    /**
+     * stores an array of Boolean in shared preferences as json string, with the given key
+     */
+    fun collectiblesArrayToPrefs(collectibles: Array<Boolean>, prefsKey: String) {
+        val prefSettings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
+        val editor = prefSettings.edit()
+        val gson = Gson()
+        val json = gson.toJson(collectibles)
         editor.putString(prefsKey, json)
         editor.apply()
     }
@@ -131,6 +160,23 @@ abstract class BaseActivity : AppCompatActivity() {
         val json = prefSettings.getString(prefsKey, "[]")
         val type = object : TypeToken<ArrayList<String>>() {}.type
         return gson.fromJson(json, type)
+    }
+
+    /**
+     * puts json string from shared preferences into an array of Booleans, given key
+     * returns the array
+     */
+    fun prefsToCollectiblesArray(prefsKey: String): Array<Boolean> {
+        val prefSettings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
+        val gson = Gson()
+        val json = prefSettings.getString(prefsKey, "[]")
+        // array of size 30 with all entries being false
+        var collectibles: Array<Boolean> = Array(30) {false}
+        if (json != "[]") {
+            val type = object : TypeToken<Array<Boolean>>() {}.type
+            collectibles = gson.fromJson(json, type)
+        }
+        return collectibles
     }
 
     /**

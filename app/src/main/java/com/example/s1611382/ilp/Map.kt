@@ -656,16 +656,19 @@ class Map : BaseActivity(), PermissionsListener, LocationEngineListener, OnMapRe
         coinWallet = prefsToCoinList(WALLET_KEY)
         coinBank = prefsToCoinList(BANK_KEY)
         collectedCoins = prefsToStringList(COLLECTED_KEY)
+        val collectibles = prefsToCollectiblesArray(COLLECTIBLES_KEY)
 
         // uploads all information onto firestore,
         // so that when app is started again, firestore is correct
         uploadCoins(WALLET_KEY, coinWallet)
         uploadCoins(BANK_KEY, coinBank)
         uploadList(COLLECTED_KEY, collectedCoins)
+        uploadBooleanArray(COLLECTIBLES_KEY, collectibles)
         val document = firestore?.collection(COLLECTION_KEY)?.document(firebaseEmail)
         val data = HashMap<String, Any>()
         data[GOLD_KEY] = gold!!
         data[COUNTER_KEY] = depositCounter!!
+        data[COUNTER_DATE_KEY] = counterDate!!
         data[DOWNLOAD_KEY] = downloadDate!!
         data[TIMER_KEY] = timerStarted
         document?.set(data, SetOptions.merge())

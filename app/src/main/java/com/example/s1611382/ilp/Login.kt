@@ -61,25 +61,30 @@ class Login : BaseActivity() {
                 ?.addOnSuccessListener { document ->
                     val gold = document.data?.get(GOLD_KEY) as Double?
                     val depositCounter = document.data?.get(COUNTER_KEY)
+                    val counterDate = document.data?.get(COUNTER_DATE_KEY)
                     val downloadDate = document.data?.get(DOWNLOAD_KEY)
                     val timerStarted = document.data?.get(TIMER_KEY)
                     var walletString = document.data?.get(WALLET_KEY).toString()
                     var bankString = document.data?.get(BANK_KEY).toString()
                     var collectedString = document.data?.get(COLLECTED_KEY).toString()
+                    var collectiblesString = document.data?.get(COLLECTIBLES_KEY).toString()
 
                     walletString = nullList(walletString)
                     bankString = nullList(bankString)
                     collectedString = nullList(collectedString)
+                    collectiblesString = nullList(collectiblesString)
 
                     val settings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
                     val editor = settings.edit()
                     editor.putString(GOLD_KEY, gold.toString())
                     editor.putString(COUNTER_KEY, depositCounter.toString())
+                    editor.putString(COUNTER_DATE_KEY, counterDate.toString())
                     editor.putString(DOWNLOAD_KEY, downloadDate.toString())
                     editor.putString(TIMER_KEY, timerStarted.toString())
                     editor.putString(WALLET_KEY, walletString)
                     editor.putString(BANK_KEY, bankString)
                     editor.putString(COLLECTED_KEY, collectedString)
+                    editor.putString(COLLECTIBLES_KEY, collectiblesString)
                     editor.apply()
 
                     openMap()
