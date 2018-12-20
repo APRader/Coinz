@@ -2,8 +2,6 @@ package com.example.s1611382.ilp;
 
 
 import android.Manifest;
-import android.content.Context;
-import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.ViewInteraction;
 import android.support.test.espresso.assertion.ViewAssertions;
 import android.support.test.filters.LargeTest;

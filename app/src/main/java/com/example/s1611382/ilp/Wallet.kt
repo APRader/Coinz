@@ -1,7 +1,6 @@
 package com.example.s1611382.ilp
 
 import android.os.Bundle
-import android.support.v4.view.GravityCompat
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.MenuItem

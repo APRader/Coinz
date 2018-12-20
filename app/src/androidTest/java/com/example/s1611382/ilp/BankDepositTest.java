@@ -174,7 +174,7 @@ public class BankDepositTest {
                         childAtPosition(
                                 allOf(withId(android.R.id.list),
                                         childAtPosition(
-                                                IsInstanceOf.<View>instanceOf(android.widget.LinearLayout.class),
+                                                IsInstanceOf.instanceOf(android.widget.LinearLayout.class),
                                                 1)),
                                 0),
                         isDisplayed()));

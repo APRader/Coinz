@@ -21,7 +21,6 @@ import android.widget.TextView
 import com.example.s1611382.ilp.Map.DownloadCompleteRunner.result
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.mapbox.android.core.location.LocationEngine
