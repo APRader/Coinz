@@ -121,7 +121,7 @@ class VendingMachine : BaseActivity() {
 
         val settings = getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE)
         val editor = settings.edit()
-        editor.putString(COUNTER_KEY, gold.toString())
+        editor.putString(GOLD_KEY, gold.toString())
         editor.apply()
 
         uploadBooleanArray(COLLECTIBLES_KEY, collectibles)
